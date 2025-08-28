@@ -28,7 +28,8 @@ When no input is provided, use `gh pr view --json number,url` to detect the PR a
 ## Data Collection Process
 
 ### 1. PR Comments Collection
-Use `gh pr view [PR] --comments --json comments,reviews,reviewThreads` to fetch:
+Use `gh pr view [PR] --comments` to fetch all comments and review threads.
+Also use `gh pr view [PR] --json reviews,latestReviews` for review details:
 - Extract verbatim comment text (preserve exact formatting)
 - Record comment author (`author.login`)
 - Note timestamp (`createdAt`)
