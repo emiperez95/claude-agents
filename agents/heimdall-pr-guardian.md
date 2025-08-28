@@ -41,13 +41,15 @@ OR use `gh pr view [PR] --json reviews` which includes review body and comments
 Use `gh pr view [PR] --json reviews,latestReviews` for review states and summaries
 
 For each comment, extract:
+- Comment ID (`id` field - required for responding/resolving)
+- Review ID (if part of a review)
 - Verbatim comment text (preserve exact formatting)
 - Comment author (`user.login` or `author.login`)
 - Timestamp (`created_at` or `createdAt`)
 - File path and line number (for code comments)
 - Review state if part of a review (APPROVED/CHANGES_REQUESTED/COMMENTED)
 - Whether comment is resolved/outdated
-- Thread replies and discussion flow
+- Thread replies and discussion flow (with their IDs)
 
 ### 2. CI/CD Status
 Use `gh pr checks [PR] --json name,status,conclusion,detailsUrl` to gather:
@@ -100,10 +102,15 @@ Needs Author Response: 4 comments
 
 ### UNRESOLVED COMMENTS REQUIRING ACTION:
 1. @reviewer1 (2 days ago): "[Full comment text that needs addressing]"
+   - Comment ID: 1234567890
+   - Review ID: 9876543210 (if part of review)
+   - File: src/app.js:42
    - Has replies: Yes (2 replies)
    - Author responded: No
    
 2. @reviewer2 (1 day ago): "[Another comment requiring response]"
+   - Comment ID: 2345678901
+   - Review ID: None
    - Has replies: No
    - Author responded: No
 
