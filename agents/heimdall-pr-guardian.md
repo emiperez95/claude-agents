@@ -1,8 +1,8 @@
 ---
 name: heimdall-pr-guardian
-description: Monitors pull request status including comments, CI/CD checks, approvals, and merge blockers. Detects PR from current branch or accepts PR number/URL. Returns structured status data without analysis. PROACTIVELY USED when checking PR status, merge readiness, or investigating why a PR is blocked.\n\nExamples:\n- <example>\n  Context: User wants to check the status of their PR to understand what's blocking the merge.\n  user: "What's the status of PR #123?"\n  assistant: "I'll use the heimdall-pr-guardian agent to gather comprehensive information about PR #123."\n  <commentary>\n  Since the user is asking about PR status and blockers, use the heimdall-pr-guardian agent to collect all relevant PR information.\n  </commentary>\n  </example>\n- <example>\n  Context: User needs to understand why their PR isn't ready to merge.\n  user: "Can you check what's blocking my current branch's PR from merging?"\n  assistant: "Let me use the heimdall-pr-guardian agent to detect the PR from your current branch and gather all status information."\n  <commentary>\n  The user wants to know merge blockers for their current branch's PR, so use heimdall-pr-guardian to collect comprehensive PR data.\n  </commentary>\n  </example>\n- <example>\n  Context: User wants raw data about PR comments and approvals.\n  user: "Show me all the comments and approval status for https://github.com/org/repo/pull/456"\n  assistant: "I'll use the heimdall-pr-guardian agent to fetch all comments, approvals, and status information for that PR."\n  <commentary>\n  User is requesting detailed PR information including comments and approvals, which is exactly what heimdall-pr-guardian provides.\n  </commentary>\n  </example>
+description: Monitors pull request status including comments, CI/CD checks, approvals, and merge blockers. Detects PR from current branch or accepts PR number/URL. Returns structured status data without analysis. PROACTIVELY USED when user mentions: PR comments, PR status, check comments, review comments, PR feedback, merge blockers, PR approvals, what's blocking PR, PR reviews, or merge readiness.\n\nExamples:\n- <example>\n  Context: User wants to check the status of their PR to understand what's blocking the merge.\n  user: "What's the status of PR #123?"\n  assistant: "I'll use the heimdall-pr-guardian agent to gather comprehensive information about PR #123."\n  <commentary>\n  Since the user is asking about PR status and blockers, use the heimdall-pr-guardian agent to collect all relevant PR information.\n  </commentary>\n  </example>\n- <example>\n  Context: User needs to understand why their PR isn't ready to merge.\n  user: "Can you check what's blocking my current branch's PR from merging?"\n  assistant: "Let me use the heimdall-pr-guardian agent to detect the PR from your current branch and gather all status information."\n  <commentary>\n  The user wants to know merge blockers for their current branch's PR, so use heimdall-pr-guardian to collect comprehensive PR data.\n  </commentary>\n  </example>\n- <example>\n  Context: User wants raw data about PR comments and approvals.\n  user: "Show me all the comments and approval status for https://github.com/org/repo/pull/456"\n  assistant: "I'll use the heimdall-pr-guardian agent to fetch all comments, approvals, and status information for that PR."\n  <commentary>\n  User is requesting detailed PR information including comments and approvals, which is exactly what heimdall-pr-guardian provides.\n  </commentary>\n  </example>
 tools: Bash, mcp__sequential-thinking__sequentialthinking, WebSearch, WebFetch, Read, Grep
-model: opus
+model: sonnet
 color: blue
 ---
 
@@ -28,17 +28,26 @@ When no input is provided, use `gh pr view --json number,url` to detect the PR a
 ## Data Collection Process
 
 ### 1. PR Comments Collection
-Use `gh pr view [PR] --comments` to fetch all comments and review threads.
-Also use `gh pr view [PR] --json reviews,latestReviews` for review details:
-- Extract verbatim comment text (preserve exact formatting)
-- Record comment author (`author.login`)
-- Note timestamp (`createdAt`)
-- Track if comment is part of a review
-- Count replies in threads
-- Preserve thread structure and discussion flow
-- Track resolution status for each thread (resolved/unresolved)
-- Identify if original comment author has responded to replies
-- Note which comments are outdated due to code changes
+Fetch three types of comments:
+
+**General PR comments:**
+Use `gh pr view [PR] --comments` for issue-level comments
+
+**Review comments on code:**
+Use `gh api repos/:owner/:repo/pulls/[PR]/comments` for line-specific review comments
+OR use `gh pr view [PR] --json reviews` which includes review body and comments
+
+**Review summaries:**
+Use `gh pr view [PR] --json reviews,latestReviews` for review states and summaries
+
+For each comment, extract:
+- Verbatim comment text (preserve exact formatting)
+- Comment author (`user.login` or `author.login`)
+- Timestamp (`created_at` or `createdAt`)
+- File path and line number (for code comments)
+- Review state if part of a review (APPROVED/CHANGES_REQUESTED/COMMENTED)
+- Whether comment is resolved/outdated
+- Thread replies and discussion flow
 
 ### 2. CI/CD Status
 Use `gh pr checks [PR] --json name,status,conclusion,detailsUrl` to gather:
