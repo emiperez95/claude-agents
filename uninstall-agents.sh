@@ -11,11 +11,12 @@ GLOBAL_AGENTS_DIR="$HOME/.claude/agents"
 # Real path of the global directory (resolving symlinks)
 REAL_GLOBAL_DIR="$(readlink -f "$GLOBAL_AGENTS_DIR" 2>/dev/null || echo "$GLOBAL_AGENTS_DIR")"
 
-# Our three agents
+# Our agents
 AGENTS=(
     "atlas-jira-analyst.md"
     "heimdall-pr-guardian.md"
     "hermes-pr-courier.md"
+    "minerva-notion-oracle.md"
 )
 
 echo "Claude Agents Uninstaller"
