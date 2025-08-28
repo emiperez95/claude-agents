@@ -1,0 +1,98 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Repository Purpose
+
+This repository contains three specialized Claude Code agents for automating information gathering from Jira and GitHub. The agents are pure information collectors that return structured data without opinions or analysis.
+
+## Installation and Management Commands
+
+```bash
+# Install agents (creates symbolic links to global Claude directory)
+./install-agents.sh
+
+# Force install (overwrites existing agents)
+./install-agents.sh --force
+
+# Uninstall agents (removes symbolic links only)
+./uninstall-agents.sh
+
+# Verify installation
+ls -la ~/.claude/agents/ | grep -E "(atlas|heimdall|hermes)"
+```
+
+## Agent Architecture
+
+### Agent Structure
+Each agent in `agents/` directory follows this format:
+- **Frontmatter**: YAML configuration with name, description, tools, model
+- **Description field**: Must include "PROACTIVELY USED" for automatic triggering
+- **Prompt**: Defines agent personality and data collection instructions
+- **Output format**: LLM-optimized structured text (not JSON)
+
+### Key Design Principles
+1. **Pure Information Gathering**: Agents collect and structure data without analysis or opinions
+2. **Proactive Triggering**: Agents activate automatically on keyword mentions
+3. **Comment ID Extraction**: All PR agents must extract comment/review IDs for responding/resolving
+4. **Model Optimization**: Using Sonnet model for cost efficiency
+
+### Agent Capabilities
+
+**Atlas Jira Analyst** (`atlas-jira-analyst.md`)
+- Extracts Jira issue IDs from git branches
+- Fetches comprehensive issue context including epic details
+- Uses Atlassian MCP tools
+
+**Heimdall PR Guardian** (`heimdall-pr-guardian.md`)  
+- Monitors PR status for user's own PRs
+- Fetches three types of comments: general, review comments on code, review summaries
+- Must use `gh api repos/:owner/:repo/pulls/[PR]/comments` for code review comments
+- Extracts comment IDs and review IDs
+
+**Hermes PR Courier** (`hermes-pr-courier.md`)
+- Collects PR content for any PR
+- Categorizes files by type (frontend/backend/tests/docs)
+- Calculates PR size (XS/S/M/L/XL)
+
+## Important Implementation Details
+
+### GitHub CLI Commands for PR Agents
+```bash
+# Get review comments on code (critical for heimdall)
+gh api repos/:owner/:repo/pulls/[PR]/comments
+
+# Get general PR comments
+gh pr view [PR] --comments
+
+# Get review summaries with states
+gh pr view [PR] --json reviews,latestReviews
+```
+
+### Symbolic Link Management
+The installer creates symbolic links from the global directory to local agents:
+- Global directory: `~/.claude/agents/` (may be symlinked to another location)
+- Local agents: `./agents/`
+- Changes to local files immediately affect global agents
+
+### Testing Agent Triggers
+After installation, restart Claude Code terminal and test with:
+- "Check PR comments" → should trigger heimdall-pr-guardian
+- "Get context for PROJ-123" → should trigger atlas-jira-analyst
+- "What's in PR #456" → should trigger hermes-pr-courier
+
+## Requirements Verification
+
+Before working with agents:
+```bash
+# Check GitHub CLI authentication
+gh auth status
+
+# Check Atlassian MCP tools (for Jira agent)
+# Should be configured in Claude Code settings
+
+# Verify agent symlinks
+readlink ~/.claude/agents/atlas-jira-analyst.md
+readlink ~/.claude/agents/heimdall-pr-guardian.md
+readlink ~/.claude/agents/hermes-pr-courier.md
+```
