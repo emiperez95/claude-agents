@@ -74,7 +74,11 @@
                         {{ agent.description[:150] }}{% if agent.description|length > 150 %}...{% endif %}
                     </div>
                     <div class="agent-footer">
-                        <span class="category-badge category-{{ agent.category.lower().replace(' ', '-') }}">{{ agent.category }}</span>
+                        {% if agent.category %}
+                            <span class="category-badge category-{{ agent.category.lower().replace(' ', '-') }}">{{ agent.category }}</span>
+                        {% else %}
+                            <span></span>
+                        {% endif %}
                         <span class="agent-model">{{ agent.model }}</span>
                     </div>
                 </div>

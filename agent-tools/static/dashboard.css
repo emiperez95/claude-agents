@@ -250,11 +250,6 @@ header h1 {
     color: #1e40af;
 }
 
-.category-utility {
-    background: #fef3c7;
-    color: #92400e;
-}
-
 .agent-meta {
     display: flex;
     gap: 20px;

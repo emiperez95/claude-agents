@@ -122,8 +122,8 @@ class AgentParser:
         elif agent_name in information_gatherers:
             return 'Information Gatherer'
         else:
-            # Default category for unknown agents
-            return 'Utility'
+            # No category for other agents
+            return ''
     
     def get_all_agents(self) -> List[Dict[str, Any]]:
         """Parse all agent files in the agents directory."""

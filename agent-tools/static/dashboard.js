@@ -94,12 +94,12 @@ async function showAgentDetail(agentName) {
         const modalBody = document.getElementById('modal-body');
         modalBody.innerHTML = `
             <h2>${data.agent.name}</h2>
-            <span class="category-badge category-${data.agent.category.toLowerCase().replace(' ', '-')}">${data.agent.category}</span>
+            ${data.agent.category ? `<span class="category-badge category-${data.agent.category.toLowerCase().replace(' ', '-')}">${data.agent.category}</span>` : ''}
             
             <div class="detail-section">
                 <h3>Basic Information</h3>
                 <table class="detail-table">
-                    <tr><th>Category</th><td>${data.agent.category}</td></tr>
+                    ${data.agent.category ? `<tr><th>Category</th><td>${data.agent.category}</td></tr>` : ''}
                     <tr><th>Model</th><td>${data.agent.model}</td></tr>
                     <tr><th>Color</th><td>${data.agent.color || 'default'}</td></tr>
                     <tr><th>File</th><td>${data.agent.filename}</td></tr>
