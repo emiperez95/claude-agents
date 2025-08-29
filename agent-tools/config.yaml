@@ -1,0 +1,42 @@
+# Claude Code Agent Manager Configuration
+
+# Paths
+agents_dir: "../agents"
+exports_dir: "exports"
+claude_agents_dir: "~/.claude/agents"
+
+# Web Dashboard Settings
+dashboard:
+  host: "0.0.0.0"
+  port: 5000
+  debug: true
+  auto_reload: true
+
+# Token Counting
+tokenizer:
+  model: "cl100k_base"  # Options: cl100k_base, p50k_base, r50k_base
+
+# Display Settings
+display:
+  max_description_preview: 150
+  max_tools_in_matrix: 15
+  max_top_tools: 10
+
+# Export Settings
+export:
+  default_format: "json"  # Options: json, csv
+  include_full_content: false
+
+# Validation Settings
+validation:
+  required_fields:
+    - name
+    - description
+    - tools
+    - model
+  valid_models:
+    - opus
+    - sonnet
+    - haiku
+  warn_description_min_length: 10
+  warn_description_max_length: 1000

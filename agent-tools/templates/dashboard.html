@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Agent Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Claude Code Agent Dashboard</h1>
+            <div class="header-actions">
+                <button onclick="exportData('json')" class="btn btn-export">Export JSON</button>
+                <button onclick="refreshData()" class="btn btn-refresh">Refresh</button>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card">
+                <h3>Total Agents</h3>
+                <div class="card-value" id="total-agents">{{ agents|length }}</div>
+            </div>
+            <div class="card">
+                <h3>Installed</h3>
+                <div class="card-value" id="installed-agents">{{ agents|selectattr('installed')|list|length }}</div>
+            </div>
+            <div class="card">
+                <h3>Total Tokens</h3>
+                <div class="card-value" id="total-tokens">-</div>
+            </div>
+            <div class="card">
+                <h3>Context Usage</h3>
+                <div class="card-value" id="context-usage">-</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('agents')">Agents</button>
+            <button class="tab-btn" onclick="showTab('stats')">Statistics</button>
+            <button class="tab-btn" onclick="showTab('tools')">Tools</button>
+        </div>
+
+        <!-- Agents Tab -->
+        <div id="agents-tab" class="tab-content active">
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search agents..." onkeyup="filterAgents()">
+            </div>
+
+            <div class="agents-grid">
+                {% for agent in agents %}
+                <div class="agent-card" data-name="{{ agent.name }}" data-category="{{ agent.category }}" onclick="showAgentDetail('{{ agent.name }}')">
+                    <div class="agent-header">
+                        <h3>{{ agent.name }}</h3>
+                        {% if agent.installed %}
+                            <span class="status-badge installed">✓ Installed</span>
+                        {% else %}
+                            <span class="status-badge not-installed">Not Installed</span>
+                        {% endif %}
+                    </div>
+                    <div class="agent-meta">
+                        <span class="meta-item">
+                            <strong>Description:</strong> {{ agent.tokens.description_tokens }} tokens
+                        </span>
+                        <span class="meta-item">
+                            <strong>Total:</strong> {{ agent.tokens.full_content_tokens }} tokens
+                        </span>
+                    </div>
+                    <div class="agent-description">
+                        {{ agent.description[:150] }}{% if agent.description|length > 150 %}...{% endif %}
+                    </div>
+                    <div class="agent-footer">
+                        <span class="category-badge category-{{ agent.category.lower().replace(' ', '-') }}">{{ agent.category }}</span>
+                        <span class="agent-model">{{ agent.model }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+        <div id="stats-tab" class="tab-content">
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Token Distribution</h3>
+                    <div id="token-chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3>Most Used Tools</h3>
+                    <div id="tools-chart"></div>
+                </div>
+            </div>
+            
+            <div class="stats-details">
+                <h3>Statistics Summary</h3>
+                <div id="stats-summary"></div>
+            </div>
+        </div>
+
+        <!-- Tools Tab -->
+        <div id="tools-tab" class="tab-content">
+            <div class="tools-container">
+                <h3>Tool Usage Matrix</h3>
+                <div id="tools-matrix"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent Detail Modal -->
+    <div id="agent-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

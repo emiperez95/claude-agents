@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Detail - {{ agent.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ agent.name }}</h1>
+            <a href="/" class="btn">Back to Dashboard</a>
+        </header>
+
+        <div class="detail-content">
+            <section class="detail-section">
+                <h2>Basic Information</h2>
+                <table class="detail-table">
+                    <tr>
+                        <th>Model</th>
+                        <td>{{ agent.model }}</td>
+                    </tr>
+                    <tr>
+                        <th>Color</th>
+                        <td>{{ agent.color }}</td>
+                    </tr>
+                    <tr>
+                        <th>File</th>
+                        <td>{{ agent.filename }}</td>
+                    </tr>
+                    <tr>
+                        <th>Installation Status</th>
+                        <td>{{ installation.details }}</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section class="detail-section">
+                <h2>Token Analysis</h2>
+                <table class="detail-table">
+                    <tr>
+                        <th>Description Tokens</th>
+                        <td>{{ tokens.description_tokens }}</td>
+                    </tr>
+                    <tr>
+                        <th>Body Tokens</th>
+                        <td>{{ tokens.body_tokens }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Tokens</th>
+                        <td>{{ tokens.full_content_tokens }}</td>
+                    </tr>
+                </table>
+            </section>
+
+            <section class="detail-section">
+                <h2>Tools ({{ agent.tools|length }})</h2>
+                <div class="tools-list">
+                    <h3>Standard Tools ({{ agent.standard_tools|length }})</h3>
+                    <ul>
+                        {% for tool in agent.standard_tools %}
+                        <li>{{ tool }}</li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <h3>MCP Tools ({{ agent.mcp_tools|length }})</h3>
+                    <ul>
+                        {% for tool in agent.mcp_tools %}
+                        <li>{{ tool }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
+
+            <section class="detail-section">
+                <h2>Description</h2>
+                <div class="description-box">
+                    {{ agent.description }}
+                </div>
+            </section>
+
+            <section class="detail-section">
+                <h2>Full Agent Content</h2>
+                <pre class="code-block">{{ agent.full_content }}</pre>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
