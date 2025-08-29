@@ -103,6 +103,7 @@ async function showAgentDetail(agentName) {
                     <tr><th>Model</th><td>${data.agent.model}</td></tr>
                     <tr><th>Color</th><td>${data.agent.color || 'default'}</td></tr>
                     <tr><th>File</th><td>${data.agent.filename}</td></tr>
+                    <tr><th>Location</th><td>${data.agent.location || 'Project: ../agents/'}</td></tr>
                     <tr><th>Installation</th><td>${data.installation.details}</td></tr>
                 </table>
             </div>

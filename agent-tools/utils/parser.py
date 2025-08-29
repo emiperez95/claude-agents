@@ -12,6 +12,8 @@ class AgentParser:
         self.agents_dir = Path(agents_dir)
         if not self.agents_dir.exists():
             raise ValueError(f"Agents directory not found: {self.agents_dir}")
+        # Global agents directory
+        self.global_agents_dir = Path.home() / ".claude" / "agents"
     
     def parse_agent_file(self, filepath: Path) -> Dict[str, Any]:
         """Parse a single agent markdown file."""
@@ -169,3 +171,23 @@ class AgentParser:
             'mcp_tools': [t for t in all_tools if t.startswith('mcp__')],
             'standard_tools': [t for t in all_tools if not t.startswith('mcp__')]
         }
+    
+    def get_all_global_agents(self) -> List[Dict[str, Any]]:
+        """Parse all agent files in the global Claude agents directory."""
+        agents = []
+        
+        if not self.global_agents_dir.exists():
+            return agents
+        
+        for filepath in self.global_agents_dir.glob('*.md'):
+            try:
+                agent_data = self.parse_agent_file(filepath)
+                # Mark as global agent
+                agent_data['source'] = 'global'
+                agent_data['source_dir'] = str(self.global_agents_dir)
+                agents.append(agent_data)
+            except Exception as e:
+                print(f"Error parsing {filepath}: {e}")
+                continue
+        
+        return sorted(agents, key=lambda x: x['name'])

@@ -79,6 +79,33 @@ header h1 {
     background: #1d4ed8;
 }
 
+.btn-all-agents {
+    background: var(--warning-color);
+    color: white;
+}
+
+.btn-all-agents:hover {
+    background: #d97706;
+}
+
+.btn-back {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-back:hover {
+    background: #4b5563;
+}
+
+.info-banner {
+    background: #f0f9ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
 /* Summary Cards */
 .summary-cards {
     display: grid;

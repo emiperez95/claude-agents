@@ -39,6 +39,25 @@ def index():
     return render_template('dashboard.html', agents=agents)
 
 
+@app.route('/all-agents')
+def all_agents():
+    """All agents page showing global Claude agents directory."""
+    agents = parser.get_all_global_agents()
+    
+    # Enhance agent data with tokens and category
+    for agent in agents:
+        tokens = counter.analyze_agent_tokens(agent)
+        agent['tokens'] = tokens
+        # For global agents, we check if they're in our local directory
+        local_path = Path("../agents") / agent['filename']
+        agent['in_project'] = local_path.exists()
+        # Ensure category is present
+        if 'category' not in agent:
+            agent['category'] = parser.get_agent_category(agent['name'])
+    
+    return render_template('all-agents.html', agents=agents)
+
+
 @app.route('/api/agents')
 def api_agents():
     """API endpoint to get all agents data."""
@@ -76,7 +95,16 @@ def api_agents():
 @app.route('/api/agent/<name>')
 def api_agent_detail(name):
     """API endpoint to get specific agent details."""
+    # First try local agents
     agent = parser.get_agent_by_name(name)
+    
+    # If not found locally, try global agents
+    if not agent:
+        global_agents = parser.get_all_global_agents()
+        for g_agent in global_agents:
+            if g_agent['name'] == name:
+                agent = g_agent
+                break
     
     if not agent:
         return jsonify({'error': 'Agent not found'}), 404
@@ -89,6 +117,12 @@ def api_agent_detail(name):
     costs = {}
     for model in ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku']:
         costs[model] = counter.estimate_cost(tokens['full_content_tokens'], model)
+    
+    # Add source information
+    if agent.get('source') == 'global':
+        agent['location'] = '~/.claude/agents/'
+    else:
+        agent['location'] = 'Project: ../agents/'
     
     return jsonify({
         'agent': agent,
@@ -248,6 +282,35 @@ def export_data(format):
         return send_file(str(filepath.absolute()), as_attachment=True)
     
     return jsonify({'error': 'Unsupported format'}), 400
+
+
+@app.route('/api/all-agents')
+def api_all_agents():
+    """API endpoint to get all global agents data."""
+    agents = parser.get_all_global_agents()
+    
+    result = []
+    for agent in agents:
+        tokens = counter.analyze_agent_tokens(agent)
+        context_percentage = (tokens['full_content_tokens'] / 200000) * 100
+        local_path = Path("../agents") / agent['filename']
+        
+        result.append({
+            'name': agent['name'],
+            'category': agent.get('category', parser.get_agent_category(agent['name'])),
+            'model': agent['model'],
+            'color': agent.get('color', 'default'),
+            'tools': agent['tools'],
+            'tool_count': len(agent['tools']),
+            'description': agent['description'],
+            'description_tokens': tokens['description_tokens'],
+            'total_tokens': tokens['full_content_tokens'],
+            'context_percentage': round(context_percentage, 3),
+            'in_project': local_path.exists(),
+            'source_dir': agent.get('source_dir', '')
+        })
+    
+    return jsonify(result)
 
 
 if __name__ == '__main__':

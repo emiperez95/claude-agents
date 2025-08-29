@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Claude Agents - Global Directory</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>All Claude Agents - Global Directory</h1>
+            <div class="header-actions">
+                <button onclick="location.href='/'" class="btn btn-back">← Project Agents</button>
+                <button onclick="refreshAllAgents()" class="btn btn-refresh">Refresh</button>
+                <button onclick="exportData('json')" class="btn btn-export">Export JSON</button>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card">
+                <h3>Total Agents</h3>
+                <div class="card-value" id="total-agents">{{ agents|length }}</div>
+            </div>
+            <div class="card">
+                <h3>In Project</h3>
+                <div class="card-value" id="in-project">{{ agents|selectattr('in_project')|list|length }}</div>
+            </div>
+            <div class="card">
+                <h3>Total Tokens</h3>
+                <div class="card-value" id="total-tokens">-</div>
+            </div>
+            <div class="card">
+                <h3>Context Usage</h3>
+                <div class="card-value" id="context-usage">-</div>
+            </div>
+        </div>
+
+        <!-- Navigation Info -->
+        <div class="info-banner" style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #1e40af;">
+            <strong>📍 Directory:</strong> ~/.claude/agents/
+            <br>
+            <small>Showing all agents installed in your global Claude directory. Agents marked with ✓ are also in your current project.</small>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Search agents by name, category, or description..." onkeyup="filterAgents()">
+        </div>
+
+        <!-- Agents Grid -->
+        <div class="agents-grid">
+            {% for agent in agents %}
+            <div class="agent-card" data-name="{{ agent.name }}" data-category="{{ agent.category }}" onclick="showAgentDetail('{{ agent.name }}')">
+                <div class="agent-header">
+                    <h3>{{ agent.name }}</h3>
+                    {% if agent.in_project %}
+                        <span class="status-badge installed">✓ In Project</span>
+                    {% else %}
+                        <span class="status-badge not-installed">Global Only</span>
+                    {% endif %}
+                </div>
+                <div class="agent-meta">
+                    <span class="meta-item">
+                        <strong>Description:</strong> {{ agent.tokens.description_tokens }} tokens
+                    </span>
+                    <span class="meta-item">
+                        <strong>Total:</strong> {{ agent.tokens.full_content_tokens }} tokens
+                    </span>
+                </div>
+                <div class="agent-description">
+                    {{ agent.description[:150] }}{% if agent.description|length > 150 %}...{% endif %}
+                </div>
+                <div class="agent-footer">
+                    <span class="category-badge category-{{ agent.category.lower().replace(' ', '-') }}">{{ agent.category }}</span>
+                    <span class="agent-model">{{ agent.model }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Agent Detail Modal -->
+    <div id="agent-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let allAgentsData = [];
+
+        // Load agents data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllAgentsData();
+        });
+
+        async function loadAllAgentsData() {
+            try {
+                const response = await fetch('/api/all-agents');
+                allAgentsData = await response.json();
+                updateSummaryCards();
+            } catch (error) {
+                console.error('Error loading agents:', error);
+            }
+        }
+
+        function updateSummaryCards() {
+            const totalTokens = allAgentsData.reduce((sum, agent) => sum + agent.total_tokens, 0);
+            const contextPercentage = ((totalTokens / 200000) * 100).toFixed(1);
+            const inProjectCount = allAgentsData.filter(agent => agent.in_project).length;
+            
+            document.getElementById('total-agents').textContent = allAgentsData.length;
+            document.getElementById('in-project').textContent = inProjectCount;
+            document.getElementById('total-tokens').textContent = totalTokens.toLocaleString();
+            document.getElementById('context-usage').textContent = `${contextPercentage}%`;
+        }
+
+        function filterAgents() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const agentCards = document.querySelectorAll('.agent-card');
+            
+            agentCards.forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                const category = card.dataset.category ? card.dataset.category.toLowerCase() : '';
+                const description = card.querySelector('.agent-description').textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || description.includes(searchTerm) || category.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        async function showAgentDetail(agentName) {
+            try {
+                const response = await fetch(`/api/agent/${agentName}`);
+                const data = await response.json();
+                
+                const modalBody = document.getElementById('modal-body');
+                modalBody.innerHTML = `
+                    <h2>${data.agent.name}</h2>
+                    <span class="category-badge category-${data.agent.category.toLowerCase().replace(' ', '-')}">${data.agent.category}</span>
+                    
+                    <div class="detail-section">
+                        <h3>Basic Information</h3>
+                        <table class="detail-table">
+                            <tr><th>Category</th><td>${data.agent.category}</td></tr>
+                            <tr><th>Model</th><td>${data.agent.model}</td></tr>
+                            <tr><th>File</th><td>${data.agent.filename}</td></tr>
+                            <tr><th>Location</th><td>${data.agent.location || '~/.claude/agents/'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Token Analysis</h3>
+                        <table class="detail-table">
+                            <tr><th>Description</th><td>${data.tokens.description_tokens} tokens</td></tr>
+                            <tr><th>Body</th><td>${data.tokens.body_tokens} tokens</td></tr>
+                            <tr><th>Total</th><td>${data.tokens.full_content_tokens} tokens</td></tr>
+                            <tr><th>Context Usage</th><td>${((data.tokens.full_content_tokens / 200000) * 100).toFixed(3)}%</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Tools (${data.agent.tools.length})</h3>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            ${data.agent.tools.map(tool => `<div>• ${tool}</div>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Description</h3>
+                        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                            ${data.agent.description.replace(/\\n/g, '<br>')}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Full Agent Content</h3>
+                        <pre style="background: #1f2937; color: #e5e7eb; padding: 20px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5; max-height: 400px; overflow-y: auto;">
+${data.agent.full_content}
+                        </pre>
+                    </div>
+                `;
+                
+                document.getElementById('agent-modal').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading agent detail:', error);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('agent-modal').style.display = 'none';
+        }
+
+        function refreshAllAgents() {
+            location.reload();
+        }
+
+        function exportData(format) {
+            // Create a blob with the agents data
+            const dataStr = JSON.stringify(allAgentsData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `all-agents-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('agent-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
