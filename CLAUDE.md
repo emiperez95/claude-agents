@@ -35,7 +35,29 @@ Each agent in `agents/` directory follows this format:
 1. **Pure Information Gathering**: Agents collect and structure data without analysis or opinions
 2. **Proactive Triggering**: Agents activate automatically on keyword mentions
 3. **Comment ID Extraction**: All PR agents must extract comment/review IDs for responding/resolving
-4. **Model Optimization**: Using Sonnet model for cost efficiency
+4. **Model Optimization**: Using Sonnet model for cost efficiency (Opus for complex orchestration)
+
+### Orchestration Protocol
+When an agent outputs an `=== ORCHESTRATION REQUIRED ===` block:
+1. **Parse the commands**: Extract the Task tool invocations listed
+2. **Execute in parallel**: Run all Task commands in a single message with multiple tool calls
+3. **Collect results**: Gather outputs from all invoked agents
+4. **Return for synthesis**: Re-invoke the orchestrating agent with `"SYNTHESIS: [combined results]"`
+
+Example orchestration flow:
+```
+User: "review PR 123"
+  ↓
+Claude: Invokes athena-pr-reviewer
+  ↓
+Athena: Outputs "=== ORCHESTRATION REQUIRED ===" with agent commands
+  ↓
+Claude: Executes all Task commands in parallel
+  ↓
+Claude: Re-invokes athena with "SYNTHESIS: [results]"
+  ↓
+Athena: Performs final review synthesis
+```
 
 ### Agent Capabilities
 
@@ -54,6 +76,12 @@ Each agent in `agents/` directory follows this format:
 - Collects PR content for any PR
 - Categorizes files by type (frontend/backend/tests/docs)
 - Calculates PR size (XS/S/M/L/XL)
+
+**Athena PR Reviewer** (`athena-pr-reviewer.md`)
+- Orchestrates comprehensive PR reviews
+- Uses command-output pattern to coordinate other agents
+- Compares implementation against Jira requirements
+- Provides actionable review recommendations
 
 ## Important Implementation Details
 

@@ -4,7 +4,7 @@ A collection of specialized Claude Code agents designed to streamline developmen
 
 ## Overview
 
-This repository contains three mythologically-named agents that act as pure information collectors, gathering and structuring data from various sources without providing opinions or analysis. These agents are designed to work proactively with Claude Code, automatically triggering when relevant keywords are mentioned.
+This repository contains mythologically-named agents designed to streamline development workflows. These agents work proactively with Claude Code, automatically triggering when relevant keywords are mentioned. They include pure information collectors and an orchestrator that coordinates comprehensive PR reviews.
 
 ## Quick Start
 
@@ -21,11 +21,17 @@ This repository contains three mythologically-named agents that act as pure info
 ### 🏛️ Atlas Jira Analyst
 Extracts comprehensive context from Jira issues including acceptance criteria, comments, and epic details.
 
+### ⚖️ Athena PR Reviewer
+Orchestrates comprehensive PR reviews by coordinating Jira requirements, PR content, and status checks to provide actionable review insights.
+
 ### 🛡️ Heimdall PR Guardian  
 Monitors your pull request status, tracking comments, CI/CD checks, approvals, and merge blockers.
 
 ### 📬 Hermes PR Courier
 Collects PR content including file changes, commit history, and linked issues for any pull request.
+
+### 🦉 Minerva Notion Oracle
+Searches and retrieves content from Notion workspaces including documentation, meeting notes, and project information.
 
 For detailed information about each agent, see [AGENTS.md](AGENTS.md).
 
@@ -47,7 +53,7 @@ The installer creates symbolic links from the global Claude agents directory to 
 ./uninstall-agents.sh
 ```
 
-This removes only the symbolic links to these three agents, leaving other agents untouched.
+This removes only the symbolic links to these agents, leaving other agents untouched.
 
 ## Requirements
 
@@ -59,7 +65,7 @@ This removes only the symbolic links to these three agents, leaving other agents
 ## Configuration
 
 The agents are configured to use:
-- **Model**: Sonnet (cost-optimized for information gathering tasks)
+- **Model**: Sonnet for data gathering, Opus for complex orchestration
 - **Proactive Mode**: Automatically triggers on relevant keywords
 - **Output Format**: LLM-optimized structured text
 
@@ -69,12 +75,15 @@ The agents are configured to use:
 .
 ├── agents/
 │   ├── atlas-jira-analyst.md
+│   ├── athena-pr-reviewer.md
 │   ├── heimdall-pr-guardian.md
-│   └── hermes-pr-courier.md
+│   ├── hermes-pr-courier.md
+│   └── minerva-notion-oracle.md
 ├── install-agents.sh
 ├── uninstall-agents.sh
 ├── README.md
-└── AGENTS.md
+├── AGENTS.md
+└── CLAUDE.md
 ```
 
 ## Troubleshooting

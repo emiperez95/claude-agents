@@ -18,6 +18,7 @@ REAL_GLOBAL_DIR="$(readlink -f "$GLOBAL_AGENTS_DIR" 2>/dev/null || echo "$GLOBAL
 # Our agents
 AGENTS=(
     "atlas-jira-analyst.md"
+    "athena-pr-reviewer.md"
     "heimdall-pr-guardian.md"
     "hermes-pr-courier.md"
     "minerva-notion-oracle.md"
