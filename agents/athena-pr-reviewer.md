@@ -2,7 +2,6 @@
 name: athena-pr-reviewer
 description: PR review orchestrator that coordinates requirements validation and code analysis. PROACTIVELY USED when reviewing pull requests.
 tools: Bash, Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch, BashOutput, KillBash, mcp__sequential-thinking__sequentialthinking
-model: sonnet
 color: green
 ---
 
