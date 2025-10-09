@@ -1,6 +1,6 @@
 # Claude Code Development Agents
 
-A collection of specialized Claude Code agents designed to streamline development workflows by automating information gathering from Jira and GitHub.
+A collection of specialized Claude Code agents designed to streamline development workflows by automating information gathering from Jira, GitHub, and Notion.
 
 ## Overview
 

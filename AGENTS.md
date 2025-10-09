@@ -1,6 +1,6 @@
 # Agent Documentation
 
-Detailed documentation for the three Claude Code development agents.
+Detailed documentation for the five Claude Code development agents.
 
 ## Atlas Jira Analyst
 
@@ -205,6 +205,145 @@ Assistant: [Invokes hermes-pr-courier to gather PR content information]
 
 ---
 
+## Athena PR Reviewer
+
+### Purpose
+Athena brings wisdom to code reviews, orchestrating comprehensive PR analysis by coordinating multiple specialized agents. She compares implementations against requirements and provides actionable review insights.
+
+### Trigger Phrases (Proactive)
+The agent automatically activates when you mention:
+- "Review PR #..."
+- "Review this pull request"
+- "PR review"
+- "Code review"
+- "Check if PR meets requirements"
+
+### Capabilities
+- Orchestrates multiple agents for comprehensive reviews
+- Fetches Jira requirements context
+- Analyzes PR content and changes
+- Monitors PR status and comments
+- Compares implementation against acceptance criteria
+- Provides structured review recommendations
+- Uses Opus model for complex reasoning
+
+### Input Formats
+```bash
+# PR number
+"Review PR #123"
+
+# Full URL
+"Review https://github.com/org/repo/pull/456"
+
+# With Jira context
+"Review PR #789 against PROJ-567"
+```
+
+### Output Format
+```
+# COMPREHENSIVE PR REVIEW: #123
+
+## REQUIREMENTS ALIGNMENT
+✅ Requirement 1: Fully implemented
+⚠️ Requirement 2: Partially implemented
+❌ Requirement 3: Not addressed
+
+## CODE QUALITY ASSESSMENT
+- Architecture: Follows established patterns
+- Testing: 80% coverage achieved
+- Documentation: Needs improvement
+
+## REVIEW RECOMMENDATIONS
+1. Address missing requirement for error handling
+2. Add unit tests for edge cases
+3. Update API documentation
+
+## MERGE READINESS
+Status: NOT READY
+Blockers:
+- 2 failing CI checks
+- 3 unresolved comments
+- Missing requirement implementation
+```
+
+### Example Usage
+```
+User: "Review PR #456"
+Assistant: [Invokes athena-pr-reviewer which orchestrates other agents for comprehensive review]
+```
+
+---
+
+## Minerva Notion Oracle
+
+### Purpose
+Minerva accesses the collective wisdom stored in Notion workspaces, retrieving documentation, meeting notes, project information, and any other knowledge stored in your Notion pages.
+
+### Trigger Phrases (Proactive)
+The agent automatically activates when you mention:
+- "Find documentation about..."
+- "Check Notion for..."
+- "Look up in our docs"
+- "Search the knowledge base"
+- "Get meeting notes"
+- Notion page URLs
+
+### Capabilities
+- Searches across Notion workspaces
+- Retrieves specific pages by URL or ID
+- Fetches page content in markdown format
+- Searches by keywords and filters
+- Accesses databases and their content
+- Follows page hierarchies
+
+### Input Formats
+```bash
+# Search query
+"Find our API authentication documentation"
+
+# Direct page URL
+"Get https://notion.so/workspace/Page-Title-123abc"
+
+# Topic search
+"Search Notion for deployment process"
+
+# Meeting notes
+"Get the architecture review meeting notes"
+```
+
+### Output Format
+```
+# NOTION SEARCH RESULTS
+
+## FOUND PAGES (3 matches)
+
+### 1. API Authentication Guide
+- **Page ID**: 123abc456def
+- **Last Updated**: 2024-01-15
+- **Space**: Engineering Docs
+- **URL**: https://notion.so/workspace/API-Auth-123abc
+
+**Content Preview:**
+[First 500 characters of page content]
+
+### 2. Authentication Best Practices
+- **Page ID**: 789ghi012jkl
+- **Last Updated**: 2024-01-10
+- **Space**: Security Guidelines
+
+## FULL CONTENT: API Authentication Guide
+
+[Complete markdown content of the most relevant page]
+```
+
+### Example Usage
+```
+User: "Find our Redis caching documentation"
+Assistant: [Invokes minerva-notion-oracle to search and retrieve Redis-related documentation]
+```
+
+---
+
 ## Customization
 
 ### Modifying Trigger Phrases
@@ -234,14 +373,26 @@ Add tool names to the `tools:` list in the frontmatter. Ensure the tools are ava
 → Triggers both atlas-jira-analyst and heimdall-pr-guardian
 ```
 
-### Code Review Preparation
+### Comprehensive PR Review
 ```
-"Review PR #456 and get the Jira context"
-→ Triggers hermes-pr-courier and atlas-jira-analyst
+"Review PR #456"
+→ Triggers athena-pr-reviewer (which orchestrates other agents)
+```
+
+### Code Review with Context
+```
+"Review PR #456 and check our coding standards in Notion"
+→ Triggers athena-pr-reviewer and minerva-notion-oracle
 ```
 
 ### Checking PR Readiness
 ```
 "Is my PR ready to merge? Check comments and status"
 → Triggers heimdall-pr-guardian
+```
+
+### Documentation Lookup
+```
+"Find our deployment process documentation"
+→ Triggers minerva-notion-oracle
 ```
