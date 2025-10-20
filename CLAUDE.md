@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This repository contains five specialized Claude Code agents for automating information gathering from Jira, GitHub, and Notion. The agents are pure information collectors that return structured data without opinions or analysis, plus an orchestrator agent for comprehensive PR reviews.
+This repository contains six specialized Claude Code agents for automating workflows and information gathering from Jira, GitHub, Notion, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus orchestrator agents for comprehensive PR reviews and development workflow automation.
 
 ## Installation and Management Commands
 
@@ -19,7 +19,7 @@ This repository contains five specialized Claude Code agents for automating info
 ./uninstall-agents.sh
 
 # Verify installation
-ls -la ~/.claude/agents/ | grep -E "(atlas|heimdall|hermes|athena|minerva)"
+ls -la ~/.claude/agents/ | grep -E "(atlas|heimdall|hermes|athena|minerva|hephaestus)"
 ```
 
 ## Agent Architecture
@@ -88,6 +88,12 @@ Athena: Performs final review synthesis
 - Fetches documentation, meeting notes, and project information
 - Uses Notion MCP tools for workspace access
 
+**Hephaestus Workspace Forge** (`hephaestus-workspace-forge.md`)
+- Orchestrates development environment setup and workflow automation
+- Manages git worktrees for Clear Session project (cs-wt command)
+- Manages tmux/sesh sessions for any project (sesh-cmd command)
+- Uses Haiku model for cost-effective command execution
+
 ## Important Implementation Details
 
 ### GitHub CLI Commands for PR Agents
@@ -115,6 +121,8 @@ After installation, restart Claude Code terminal and test with:
 - "What's in PR #456" → should trigger hermes-pr-courier
 - "Review PR #789" → should trigger athena-pr-reviewer
 - "Find our API documentation" → should trigger minerva-notion-oracle
+- "Create a worktree for CSD-2345" → should trigger hephaestus-workspace-forge
+- "Add a tmux session for my project" → should trigger hephaestus-workspace-forge
 
 ## Requirements Verification
 
@@ -134,5 +142,6 @@ readlink ~/.claude/agents/atlas-jira-analyst.md
 readlink ~/.claude/agents/heimdall-pr-guardian.md
 readlink ~/.claude/agents/hermes-pr-courier.md
 readlink ~/.claude/agents/athena-pr-reviewer.md
+readlink ~/.claude/agents/hephaestus-workspace-forge.md
 readlink ~/.claude/agents/minerva-notion-oracle.md
 ```

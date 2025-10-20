@@ -17,6 +17,7 @@ AGENTS=(
     "athena-pr-reviewer.md"
     "heimdall-pr-guardian.md"
     "hermes-pr-courier.md"
+    "hephaestus-workspace-forge.md"
     "minerva-notion-oracle.md"
 )
 
