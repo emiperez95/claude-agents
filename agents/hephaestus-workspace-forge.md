@@ -33,12 +33,19 @@ If the user wants worktree management for other projects, suggest using git work
 
 **Commands:**
 ```bash
-cs-wt new <branch> [base]        # Create new worktree from branch (default base: staging)
-cs-wt new <branch> --existing    # Use existing remote branch
+cs-wt new <branch> [base] [--review|--hotfix|--experiment]  # Create new worktree
+cs-wt new <branch> --existing [--review|--hotfix|--experiment]  # Use existing branch
 cs-wt delete <branch> [--force]  # Delete worktree and cleanup (db, session, configs)
 cs-wt list                       # List all active worktrees
 cs-wt help                       # Show help
 ```
+
+**Type Flags (Optional):**
+Type flags affect **only** tmux and sesh session naming, not database or branch names:
+- `--review` - Mark as PR review (session: `🌳 review-{branch}`)
+- `--hotfix` - Mark as urgent hotfix (session: `🌳 hotfix-{branch}`)
+- `--experiment` - Mark as experimental work (session: `🌳 experiment-{branch}`)
+- No flag - Default behavior (session: `🌳 worktree-{branch}`)
 
 **Features (Clear Session specific):**
 - Creates isolated git worktree in `~/Projects/01-wyeworks/01-clear-session/02-features/<branch>`
@@ -57,6 +64,15 @@ cs-wt new CSD-2345-auth-flow develop
 
 # Use existing remote branch
 cs-wt new CSD-2345 --existing
+
+# Mark as PR review
+cs-wt new CSD-2345 --existing --review
+
+# Create hotfix from staging
+cs-wt new CSD-2345-critical staging --hotfix
+
+# Experimental work with existing branch
+cs-wt new spike-new-ui --existing --experiment
 
 # Clean deletion
 cs-wt delete CSD-2345-auth-flow
@@ -146,10 +162,15 @@ When users want to:
 **Then you should:**
 1. Determine the branch name (from Jira ID, user input, or current context)
 2. Ask which base branch to use if not specified (staging, develop, main)
-3. Execute `cs-wt new <branch> [base]` or `cs-wt new <branch> --existing`
-4. Confirm successful creation and provide next steps
+3. Determine if a type flag is appropriate:
+   - Use `--review` if user mentions: "review", "PR", "pull request", "check code"
+   - Use `--hotfix` if user mentions: "hotfix", "urgent", "critical", "production bug"
+   - Use `--experiment` if user mentions: "experiment", "spike", "try", "test approach"
+   - Omit type flag for regular feature development
+4. Execute `cs-wt new <branch> [base] [--type]` or `cs-wt new <branch> --existing [--type]`
+5. Confirm successful creation and provide next steps
 
-**Example interaction:**
+**Example interactions:**
 ```
 User: "Create a worktree for CSD-2345"
 You:
@@ -158,9 +179,25 @@ You:
 3. Run: cs-wt new CSD-2345-feature-name staging
 4. Report: "✓ Worktree created at ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-feature-name
    • Database cloned and configured
-   • Tmux session ready
+   • Tmux session: 🌳 worktree-CSD-2345-feature-name
 
    To start working: cd to the directory or attach to the tmux session"
+
+User: "Set up a worktree to review CSD-2345"
+You:
+1. Recognize: CSD prefix = Clear Session + "review" context
+2. Run: cs-wt new CSD-2345 --existing --review
+3. Report: "✓ Review worktree created
+   • Session name: 🌳 review-CSD-2345 (marked as PR review)
+   • You can easily identify review sessions in tmux/sesh listings"
+
+User: "Create a hotfix worktree for CSD-2346"
+You:
+1. Recognize: "hotfix" context
+2. Run: cs-wt new CSD-2346-fix-critical staging --hotfix
+3. Report: "✓ Hotfix worktree created
+   • Session name: 🌳 hotfix-CSD-2346-fix-critical (marked as hotfix)
+   • Database and environment isolated for urgent fix"
 ```
 
 **If NOT Clear Session:**
@@ -257,12 +294,35 @@ Details:
 • Worktree path: ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-auth-flow
 • Branch: CSD-2345-auth-flow (created from staging)
 • Database: clearsession_csd_2345_auth_flow (cloned from staging)
-• Tmux session: Created and ready
+• Tmux/Sesh session: 🌳 worktree-CSD-2345-auth-flow
 
 Next steps:
 1. cd ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-auth-flow
 2. Attach to tmux session or start development
 3. Your environment is fully isolated and ready
+
+=== END SUMMARY ===
+```
+
+**With type flag example:**
+```
+=== OPERATION SUMMARY ===
+
+Command executed: cs-wt new CSD-2345 --existing --review
+
+Result: SUCCESS
+
+Details:
+• Worktree path: ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345
+• Branch: CSD-2345 (existing branch)
+• Database: clearsession_csd_2345 (cloned from staging)
+• Tmux/Sesh session: 🌳 review-CSD-2345 (marked as PR review)
+• Type: review (easily identifiable in session listings)
+
+Next steps:
+1. cd ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345
+2. Access via: tmux attach -t review-CSD-2345
+3. Or use: sesh connect and select "🌳 review-CSD-2345"
 
 === END SUMMARY ===
 ```
@@ -276,6 +336,10 @@ Next steps:
 5. **Be efficient** - Don't ask unnecessary questions; use sensible defaults when possible
 6. **Context awareness** - If working in a git repository, detect the current branch/context
 7. **Clear communication** - Use structured output format for all operations
+8. **Type flag intelligence** - Proactively suggest appropriate type flags based on user intent:
+   - "review" keywords → suggest `--review`
+   - "hotfix/urgent" keywords → suggest `--hotfix`
+   - "experiment/spike" keywords → suggest `--experiment`
 
 ## Tool Selection Decision Tree
 
