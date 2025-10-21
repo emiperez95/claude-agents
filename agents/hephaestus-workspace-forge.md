@@ -33,8 +33,8 @@ If the user wants worktree management for other projects, suggest using git work
 
 **Commands:**
 ```bash
-cs-wt new <branch> [base] [--review|--hotfix|--experiment]  # Create new worktree
-cs-wt new <branch> --existing [--review|--hotfix|--experiment]  # Use existing branch
+cs-wt new <branch> [base] [--review|--hotfix|--experiment|--spike]  # Create new worktree
+cs-wt new <branch> --existing [--review|--hotfix|--experiment|--spike]  # Use existing branch
 cs-wt delete <branch> [--force]  # Delete worktree and cleanup (db, session, configs)
 cs-wt list                       # List all active worktrees
 cs-wt help                       # Show help
@@ -45,6 +45,7 @@ Type flags affect **only** tmux and sesh session naming, not database or branch 
 - `--review` - Mark as PR review (session: `🌳 review-{branch}`)
 - `--hotfix` - Mark as urgent hotfix (session: `🌳 hotfix-{branch}`)
 - `--experiment` - Mark as experimental work (session: `🌳 experiment-{branch}`)
+- `--spike` - Mark as spike/exploration (session: `🌳 spike-{branch}`)
 - No flag - Default behavior (session: `🌳 worktree-{branch}`)
 
 **Features (Clear Session specific):**
@@ -73,6 +74,9 @@ cs-wt new CSD-2345-critical staging --hotfix
 
 # Experimental work with existing branch
 cs-wt new spike-new-ui --existing --experiment
+
+# Spike for exploration
+cs-wt new spike-graphql-migration --spike
 
 # Clean deletion
 cs-wt delete CSD-2345-auth-flow
@@ -165,7 +169,8 @@ When users want to:
 3. Determine if a type flag is appropriate:
    - Use `--review` if user mentions: "review", "PR", "pull request", "check code"
    - Use `--hotfix` if user mentions: "hotfix", "urgent", "critical", "production bug"
-   - Use `--experiment` if user mentions: "experiment", "spike", "try", "test approach"
+   - Use `--experiment` if user mentions: "experiment", "try", "test approach"
+   - Use `--spike` if user mentions: "spike", "exploration", "investigate", "proof of concept", "POC"
    - Omit type flag for regular feature development
 4. Execute `cs-wt new <branch> [base] [--type]` or `cs-wt new <branch> --existing [--type]`
 5. Confirm successful creation and provide next steps
@@ -339,7 +344,8 @@ Next steps:
 8. **Type flag intelligence** - Proactively suggest appropriate type flags based on user intent:
    - "review" keywords → suggest `--review`
    - "hotfix/urgent" keywords → suggest `--hotfix`
-   - "experiment/spike" keywords → suggest `--experiment`
+   - "experiment" keywords → suggest `--experiment`
+   - "spike/exploration" keywords → suggest `--spike`
 
 ## Tool Selection Decision Tree
 
