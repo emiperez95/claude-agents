@@ -194,7 +194,7 @@ rclone config
 3. Choose the number for "Google Drive" from the storage list
 4. Press Enter for default client ID (or provide your own)
 5. Press Enter for default client secret (or provide your own)
-6. Choose scope: `1` for full access to all files
+6. Choose scope: `2` for **read-only access** (recommended for this agent)
 7. Press Enter for default root folder ID
 8. Press Enter for default service account file
 9. Choose `n` for "Edit advanced config"
@@ -298,10 +298,12 @@ If this returns empty or doesn't show `gdrive:`:
   1. Choose 'n' for new remote
   2. Name it 'gdrive'
   3. Choose 'Google Drive' from storage types
-  4. Use default settings (press Enter)
-  5. Choose 'y' for auto config (opens browser)
-  6. Authenticate with your Google account
-  7. Confirm and quit config
+  4. Use default client ID and secret (press Enter)
+  5. Choose scope 2 for read-only access
+  6. Use other defaults (press Enter)
+  7. Choose 'y' for auto config (opens browser)
+  8. Authenticate with your Google account
+  9. Confirm and quit config
 
   Verify configuration:
     rclone listremotes

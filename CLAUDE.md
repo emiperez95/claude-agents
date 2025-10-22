@@ -149,7 +149,7 @@ acli jira auth login --web
 ```bash
 # Authentication (one-time setup)
 rclone config
-# Choose: n (new remote) → name it 'gdrive' → select Google Drive → use defaults → authenticate in browser
+# Choose: n (new remote) → name it 'gdrive' → select Google Drive → scope 2 (read-only) → use other defaults → authenticate in browser
 
 # Check if configured
 rclone listremotes
