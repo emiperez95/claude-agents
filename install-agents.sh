@@ -18,11 +18,13 @@ REAL_GLOBAL_DIR="$(readlink -f "$GLOBAL_AGENTS_DIR" 2>/dev/null || echo "$GLOBAL
 # Our agents
 AGENTS=(
     "atlas-jira-analyst.md"
+    "apollo-jira-scribe.md"
     "athena-pr-reviewer.md"
     "heimdall-pr-guardian.md"
     "hermes-pr-courier.md"
     "hephaestus-workspace-forge.md"
     "minerva-notion-oracle.md"
+    "clio-docs-oracle.md"
 )
 
 # Check for --force flag
