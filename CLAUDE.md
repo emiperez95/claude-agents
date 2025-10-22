@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This repository contains seven specialized Claude Code agents for automating workflows and information gathering from Jira, GitHub, Notion, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus orchestrator agents for comprehensive PR reviews and development workflow automation.
+This repository contains eight specialized Claude Code agents for automating workflows and information gathering from Jira, GitHub, Notion, Google Drive, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus orchestrator agents for comprehensive PR reviews and development workflow automation.
 
 ## Installation and Management Commands
 
@@ -19,7 +19,7 @@ This repository contains seven specialized Claude Code agents for automating wor
 ./uninstall-agents.sh
 
 # Verify installation
-ls -la ~/.claude/agents/ | grep -E "(atlas|apollo|heimdall|hermes|athena|minerva|hephaestus)"
+ls -la ~/.claude/agents/ | grep -E "(atlas|apollo|heimdall|hermes|athena|minerva|hephaestus|clio)"
 ```
 
 ## Agent Architecture
@@ -96,6 +96,14 @@ Athena: Performs final review synthesis
 - Fetches documentation, meeting notes, and project information
 - Uses Notion MCP tools for workspace access
 
+**Clio Docs Oracle** (`clio-docs-oracle.md`)
+- Reads Google Drive files from shared links
+- Exports Google Docs to text, Google Sheets to CSV
+- Downloads PDFs and other file types
+- Uses rclone CLI with Google OAuth 2.0 authentication
+- Processes Drive attachments from Jira tickets
+- Actively maintained tool with auto token refresh
+
 **Hephaestus Workspace Forge** (`hephaestus-workspace-forge.md`)
 - Orchestrates development environment setup and workflow automation
 - Manages git worktrees for Clear Session project (cs-wt command)
@@ -137,6 +145,39 @@ acli jira auth login --web
 - Use `--json` flag for structured output
 - Use `--generate-json` to discover available fields and custom field IDs
 
+### Google Drive CLI Commands for Document Reader
+```bash
+# Authentication (one-time setup)
+rclone config
+# Choose: n (new remote) → name it 'gdrive' → select Google Drive → use defaults → authenticate in browser
+
+# Check if configured
+rclone listremotes
+# Should show: gdrive:
+
+# Export Google Docs to text
+rclone backend copyid gdrive: {FILE_ID} /tmp/output.txt --drive-export-formats txt
+
+# Export Google Sheets to CSV
+rclone backend copyid gdrive: {FILE_ID} /tmp/output.csv --drive-export-formats csv
+
+# Download regular files (PDFs, images, etc.)
+rclone backend copyid gdrive: {FILE_ID} /tmp/output.pdf
+rclone backend copyid gdrive: {FILE_ID} -  # Stream to stdout
+
+# Stream file content (alternative)
+rclone cat gdrive:path/to/file
+```
+
+**Important Notes:**
+- rclone uses Google's official OAuth 2.0 API for secure authentication
+- Actively maintained (v1.71.2 in 2025) with 11K+ installs/month
+- Tokens auto-refresh automatically - no re-authentication needed
+- Google Workspace files (Docs, Sheets) must be exported, not downloaded
+- File IDs are extracted from various Drive URL formats
+- Credentials stored in `~/.config/rclone/rclone.conf`
+- No syncing - downloads only specified files
+
 ### Symbolic Link Management
 The installer creates symbolic links from the global directory to local agents:
 - Global directory: `~/.claude/agents/` (may be symlinked to another location)
@@ -152,6 +193,8 @@ After installation, restart Claude Code terminal and test with:
 - "What's in PR #456" → should trigger hermes-pr-courier
 - "Review PR #789" → should trigger athena-pr-reviewer
 - "Find our API documentation" → should trigger minerva-notion-oracle
+- "Read this Google Doc link" → should trigger clio-docs-oracle
+- "Get content from Drive attachment" → should trigger clio-docs-oracle
 - "Create a worktree for CSD-2345" → should trigger hephaestus-workspace-forge
 - "Add a tmux session for my project" → should trigger hephaestus-workspace-forge
 
@@ -164,6 +207,10 @@ gh auth status
 
 # Check Atlassian CLI authentication (for Jira agents)
 acli jira auth status
+
+# Check Google Drive CLI authentication (for Drive reader agent)
+rclone listremotes
+# Should show: gdrive:
 
 # Check Atlassian MCP tools (for Jira agents - legacy)
 # Should be configured in Claude Code settings
@@ -179,4 +226,5 @@ readlink ~/.claude/agents/hermes-pr-courier.md
 readlink ~/.claude/agents/athena-pr-reviewer.md
 readlink ~/.claude/agents/hephaestus-workspace-forge.md
 readlink ~/.claude/agents/minerva-notion-oracle.md
+readlink ~/.claude/agents/clio-docs-oracle.md
 ```
