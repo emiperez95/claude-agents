@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This repository contains six specialized Claude Code agents for automating workflows and information gathering from Jira, GitHub, Notion, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus orchestrator agents for comprehensive PR reviews and development workflow automation.
+This repository contains seven specialized Claude Code agents for automating workflows and information gathering from Jira, GitHub, Notion, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus orchestrator agents for comprehensive PR reviews and development workflow automation.
 
 ## Installation and Management Commands
 
@@ -19,7 +19,7 @@ This repository contains six specialized Claude Code agents for automating workf
 ./uninstall-agents.sh
 
 # Verify installation
-ls -la ~/.claude/agents/ | grep -E "(atlas|heimdall|hermes|athena|minerva|hephaestus)"
+ls -la ~/.claude/agents/ | grep -E "(atlas|apollo|heimdall|hermes|athena|minerva|hephaestus)"
 ```
 
 ## Agent Architecture
@@ -65,6 +65,14 @@ Athena: Performs final review synthesis
 - Extracts Jira issue IDs from git branches
 - Fetches comprehensive issue context including epic details
 - Returns structured data without analysis
+- Read-only Jira operations
+
+**Apollo Jira Scribe** (`apollo-jira-scribe.md`)
+- Creates new Jira tickets with specified fields
+- Transitions tickets between workflow states (To Do → In Progress → Done)
+- Moves tickets to sprints via custom field updates
+- Executes write operations and returns confirmation
+- Pure execution agent without analysis
 
 **Heimdall PR Guardian** (`heimdall-pr-guardian.md`)  
 - Monitors PR status for user's own PRs
@@ -108,6 +116,27 @@ gh pr view [PR] --comments
 gh pr view [PR] --json reviews,latestReviews
 ```
 
+### Atlassian CLI Commands for Jira Agents
+```bash
+# Read operations (atlas-jira-analyst)
+acli jira workitem view ISSUE-123 --fields *all --json
+acli jira workitem search --jql "project = PROJ" --json
+
+# Write operations (apollo-jira-scribe)
+acli jira workitem create --summary "Title" --project "PROJ" --type "Story" --json
+acli jira workitem transition --key "PROJ-123" --status "In Progress" --json
+acli jira workitem edit --from-json "ticket.json" --json
+
+# Authentication
+acli jira auth status
+acli jira auth login --web
+```
+
+**Important Notes:**
+- Sprint field is a custom field (typically `customfield_10020`, varies by instance)
+- Use `--json` flag for structured output
+- Use `--generate-json` to discover available fields and custom field IDs
+
 ### Symbolic Link Management
 The installer creates symbolic links from the global directory to local agents:
 - Global directory: `~/.claude/agents/` (may be symlinked to another location)
@@ -118,6 +147,8 @@ The installer creates symbolic links from the global directory to local agents:
 After installation, restart Claude Code terminal and test with:
 - "Check PR comments" → should trigger heimdall-pr-guardian
 - "Get context for PROJ-123" → should trigger atlas-jira-analyst
+- "Create a ticket for new feature" → should trigger apollo-jira-scribe
+- "Move PROJ-123 to In Progress" → should trigger apollo-jira-scribe
 - "What's in PR #456" → should trigger hermes-pr-courier
 - "Review PR #789" → should trigger athena-pr-reviewer
 - "Find our API documentation" → should trigger minerva-notion-oracle
@@ -131,7 +162,10 @@ Before working with agents:
 # Check GitHub CLI authentication
 gh auth status
 
-# Check Atlassian MCP tools (for Jira agent)
+# Check Atlassian CLI authentication (for Jira agents)
+acli jira auth status
+
+# Check Atlassian MCP tools (for Jira agents - legacy)
 # Should be configured in Claude Code settings
 
 # Check Notion MCP tools (for Notion agent)
@@ -139,6 +173,7 @@ gh auth status
 
 # Verify agent symlinks
 readlink ~/.claude/agents/atlas-jira-analyst.md
+readlink ~/.claude/agents/apollo-jira-scribe.md
 readlink ~/.claude/agents/heimdall-pr-guardian.md
 readlink ~/.claude/agents/hermes-pr-courier.md
 readlink ~/.claude/agents/athena-pr-reviewer.md

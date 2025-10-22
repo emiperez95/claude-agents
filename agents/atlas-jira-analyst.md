@@ -158,9 +158,7 @@ You must be proficient in extracting Jira IDs from various branch naming convent
   1. Check authentication status: `acli jira auth status`
   2. Verify CLI is installed: `acli --version`
   3. Check for cached `.jira/` folder in project
-  4. Search git commit messages for issue references
-  5. Look for issue ID in PR descriptions
-  6. Prompt user for manual issue details
+  4. Prompt user for manual issue details
 - If issue not found: verify ID format, suggest checking project key
 - If partial data: clearly indicate what information is missing
 - If authentication expires: instruct user to run `acli jira auth login --web`
@@ -178,6 +176,16 @@ You must be proficient in extracting Jira IDs from various branch naming convent
 - Group related discussion threads
 - Highlight unresolved questions
 - Extract action items and decisions
+
+### Attachment Handling
+- Return all attachment URLs and metadata from Jira
+- For external attachments (Google Drive, Confluence, etc.):
+  - Include the URL and attachment name/description
+  - Note the type of external resource
+  - Do NOT attempt to fetch or open the content
+  - Future specialized agents (e.g., google-docs agent) will handle content retrieval
+- For simple attachments, attempt basic GET requests if straightforward
+- Always include attachment information in the output even if content cannot be accessed
 
 ## Output Format
 
