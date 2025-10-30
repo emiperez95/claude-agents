@@ -6,19 +6,19 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Global agents directory
+# Global agents directory (now a real directory, not a symlink)
 GLOBAL_AGENTS_DIR="$HOME/.claude/agents"
-# Real path of the global directory (resolving symlinks)
-REAL_GLOBAL_DIR="$(readlink -f "$GLOBAL_AGENTS_DIR" 2>/dev/null || echo "$GLOBAL_AGENTS_DIR")"
 
 # Our agents
 AGENTS=(
     "atlas-jira-analyst.md"
+    "apollo-jira-scribe.md"
     "athena-pr-reviewer.md"
     "heimdall-pr-guardian.md"
     "hermes-pr-courier.md"
     "hephaestus-workspace-forge.md"
     "minerva-notion-oracle.md"
+    "clio-docs-oracle.md"
 )
 
 echo "Claude Agents Uninstaller"
@@ -26,19 +26,19 @@ echo "========================"
 echo ""
 
 # Check if global agents directory exists
-if [[ ! -d "$REAL_GLOBAL_DIR" ]]; then
+if [[ ! -d "$GLOBAL_AGENTS_DIR" ]]; then
     echo -e "${RED}Error: Global agents directory not found at $GLOBAL_AGENTS_DIR${NC}"
     echo "Nothing to uninstall."
     exit 1
 fi
 
-echo "Global agents directory: $REAL_GLOBAL_DIR"
+echo "Global agents directory: $GLOBAL_AGENTS_DIR"
 echo ""
 
 # Check which agents exist
 existing_agents=()
 for agent in "${AGENTS[@]}"; do
-    if [[ -e "$REAL_GLOBAL_DIR/$agent" ]]; then
+    if [[ -e "$GLOBAL_AGENTS_DIR/$agent" ]]; then
         existing_agents+=("$agent")
     fi
 done
@@ -55,9 +55,9 @@ success_count=0
 fail_count=0
 
 for agent in "${existing_agents[@]}"; do
-    global_path="$REAL_GLOBAL_DIR/$agent"
-    
-    # Remove the agent (whether it's a symlink or regular file)
+    global_path="$GLOBAL_AGENTS_DIR/$agent"
+
+    # Remove the agent symlink
     if rm -f "$global_path" 2>/dev/null; then
         echo -e "${GREEN}  ✓ Removed: $agent${NC}"
         ((success_count++))

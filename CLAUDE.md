@@ -179,10 +179,12 @@ rclone cat gdrive:path/to/file
 - No syncing - downloads only specified files
 
 ### Symbolic Link Management
-The installer creates symbolic links from the global directory to local agents:
-- Global directory: `~/.claude/agents/` (may be symlinked to another location)
+The installer creates file-level symbolic links in the global directory:
+- Global directory: `~/.claude/agents/` (real directory, not a symlink)
 - Local agents: `./agents/`
+- Each agent is individually symlinked from global to local
 - Changes to local files immediately affect global agents
+- You can manually add other agent files directly to `~/.claude/agents/` if needed
 
 ### Testing Agent Triggers
 After installation, restart Claude Code terminal and test with:
