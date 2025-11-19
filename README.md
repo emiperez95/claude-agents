@@ -1,10 +1,12 @@
-# Claude Code Development Agents
+# Claude Code Development Agents & Commands
 
-A collection of specialized Claude Code agents designed to streamline development workflows by automating information gathering from Jira, GitHub, and Notion.
+A collection of specialized Claude Code agents and slash commands designed to streamline development workflows by automating information gathering from Jira, GitHub, Notion, and Google Drive, plus integration with Gemini for large-scale codebase analysis.
 
 ## Overview
 
-This repository contains mythologically-named agents designed to streamline development workflows. These agents work proactively with Claude Code, automatically triggering when relevant keywords are mentioned. They include pure information collectors and an orchestrator that coordinates comprehensive PR reviews.
+This repository contains mythologically-named agents designed to streamline development workflows. These agents work proactively with Claude Code, automatically triggering when relevant keywords are mentioned. They include pure information collectors and orchestrators that coordinate comprehensive PR reviews and development workflows.
+
+Additionally, this repository includes slash commands that extend Claude Code's capabilities with external tools like Gemini CLI for analyzing large codebases.
 
 ## Quick Start
 
@@ -33,33 +35,57 @@ Collects PR content including file changes, commit history, and linked issues fo
 ### 🦉 Minerva Notion Oracle
 Searches and retrieves content from Notion workspaces including documentation, meeting notes, and project information.
 
+### 📜 Clio Docs Oracle
+Reads and retrieves content from Google Drive links including Docs, Sheets, PDFs, and other files using rclone CLI.
+
+### ⚒️ Hephaestus Workspace Forge
+Orchestrates development environment setup including git worktrees and tmux/sesh session management.
+
+### 🖊️ Apollo Jira Scribe
+Creates Jira tickets, transitions workflow states, and assigns tickets to sprints.
+
 For detailed information about each agent, see [AGENTS.md](AGENTS.md).
+
+## Slash Commands
+
+### 🔮 Gemini CLI Integration
+Leverages Gemini's massive context window for large codebase analysis. Use `/gemini @src/ <your question>` to analyze entire directories, verify feature implementations, or understand project-wide architecture.
+
+**Example usage:**
+```bash
+/gemini @src/ Has dark mode been implemented?
+/gemini @src/ @tests/ Analyze test coverage
+/gemini @./ Give me an overview of this project
+```
 
 ## Installation
 
-### Install Agents
+### Install Agents & Commands
 ```bash
-# Normal installation (fails if agents already exist)
+# Normal installation (fails if agents/commands already exist)
 ./install-agents.sh
 
-# Force installation (overwrites existing agents)
+# Force installation (overwrites existing agents/commands)
 ./install-agents.sh --force
 ```
 
-The installer creates symbolic links from the global Claude agents directory to your local copies, ensuring any updates you make are immediately available globally.
+The installer creates symbolic links from the global Claude directories (`~/.claude/agents/` and `~/.claude/commands/`) to your local copies, ensuring any updates you make are immediately available globally.
 
-### Uninstall Agents
+### Uninstall Agents & Commands
 ```bash
 ./uninstall-agents.sh
 ```
 
-This removes only the symbolic links to these agents, leaving other agents untouched.
+This removes only the symbolic links to these agents and commands, leaving other files untouched.
 
 ## Requirements
 
 - Claude Code installed and configured
 - GitHub CLI (`gh`) for PR-related agents
-- Atlassian MCP tools configured for Jira agent
+- Atlassian CLI (`acli`) for Jira agents
+- Notion MCP tools configured for Notion agent
+- rclone CLI for Google Drive agent
+- Gemini CLI for Gemini command (optional)
 - Unix-like environment (macOS, Linux)
 
 ## Configuration
@@ -75,10 +101,15 @@ The agents are configured to use:
 .
 ├── agents/
 │   ├── atlas-jira-analyst.md
+│   ├── apollo-jira-scribe.md
 │   ├── athena-pr-reviewer.md
 │   ├── heimdall-pr-guardian.md
 │   ├── hermes-pr-courier.md
-│   └── minerva-notion-oracle.md
+│   ├── minerva-notion-oracle.md
+│   ├── clio-docs-oracle.md
+│   └── hephaestus-workspace-forge.md
+├── commands/
+│   └── gemini.md
 ├── install-agents.sh
 ├── uninstall-agents.sh
 ├── README.md
@@ -102,9 +133,14 @@ The agents are configured to use:
 - Verify `gh` CLI is installed and authenticated: `gh auth status`
 - Ensure you're in a git repository with an associated PR
 
-### Jira agent not working
-- Check that Atlassian MCP tools are configured
+### Jira agents not working
+- Check that Atlassian CLI is installed: `acli jira auth status`
 - Verify you have access to the Jira instance
+
+### Gemini command not working
+- Install Gemini CLI if not already installed
+- Configure API key for Gemini CLI
+- Verify installation: `gemini --version`
 
 ## Contributing
 

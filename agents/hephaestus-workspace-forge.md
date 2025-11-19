@@ -104,7 +104,7 @@ sesh-cmd list [options]             # List all sessions
 - `--claude` - Start with Claude in split pane
 - `--docker-compose` - Start with docker-compose up
 - `--custom <command>` - Custom startup command
-- `--emoji <type>` - Set emoji (project, startup, work, home, config, tools, server, etc.)
+- `--emoji <type>` - Set emoji (project, startup, work, home, config, tools, server, database, phone, etc.)
 
 **Update-specific Options:**
 - `--path <path>` - Change session path

@@ -6,20 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository contains eight specialized Claude Code agents for automating workflows and information gathering from Jira, GitHub, Notion, Google Drive, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus orchestrator agents for comprehensive PR reviews and development workflow automation.
 
+It also includes slash commands for extending Claude Code's capabilities with external tools.
+
 ## Installation and Management Commands
 
 ```bash
-# Install agents (creates symbolic links to global Claude directory)
+# Install agents and commands (creates symbolic links to global Claude directory)
 ./install-agents.sh
 
-# Force install (overwrites existing agents)
+# Force install (overwrites existing agents and commands)
 ./install-agents.sh --force
 
-# Uninstall agents (removes symbolic links only)
+# Uninstall agents and commands (removes symbolic links only)
 ./uninstall-agents.sh
 
 # Verify installation
 ls -la ~/.claude/agents/ | grep -E "(atlas|apollo|heimdall|hermes|athena|minerva|hephaestus|clio)"
+ls -la ~/.claude/commands/ | grep gemini
 ```
 
 ## Agent Architecture
@@ -109,6 +112,28 @@ Athena: Performs final review synthesis
 - Manages git worktrees for Clear Session project (cs-wt command)
 - Manages tmux/sesh sessions for any project (sesh-cmd command)
 - Uses Haiku model for cost-effective command execution
+
+## Slash Commands
+
+### Gemini CLI Integration (`commands/gemini.md`)
+- Leverages Gemini's massive context window for large codebase analysis
+- Uses `gemini -p` with `@` syntax for file/directory inclusion
+- Ideal for architecture reviews, feature verification, pattern detection
+- Complements Claude Code's execution capabilities with Gemini's analysis capacity
+- Invoked via `/gemini` slash command
+
+**Usage examples:**
+```bash
+/gemini @src/ Has dark mode been implemented?
+/gemini @src/ @tests/ Analyze test coverage
+/gemini @./ Give me an overview of this project
+```
+
+**When to use:**
+- Analyzing entire codebases or large directories
+- Working with files totaling more than 100KB
+- Verifying if features/patterns are implemented across the codebase
+- Understanding project-wide architecture
 
 ## Important Implementation Details
 
@@ -200,6 +225,10 @@ After installation, restart Claude Code terminal and test with:
 - "Create a worktree for CSD-2345" → should trigger hephaestus-workspace-forge
 - "Add a tmux session for my project" → should trigger hephaestus-workspace-forge
 
+### Testing Commands
+After installation, restart Claude Code terminal and test with:
+- `/gemini @src/ Analyze the codebase architecture` → should execute gemini command
+
 ## Requirements Verification
 
 Before working with agents:
@@ -213,6 +242,9 @@ acli jira auth status
 # Check Google Drive CLI authentication (for Drive reader agent)
 rclone listremotes
 # Should show: gdrive:
+
+# Check Gemini CLI (for Gemini command)
+gemini --version
 
 # Check Atlassian MCP tools (for Jira agents - legacy)
 # Should be configured in Claude Code settings
@@ -229,4 +261,7 @@ readlink ~/.claude/agents/athena-pr-reviewer.md
 readlink ~/.claude/agents/hephaestus-workspace-forge.md
 readlink ~/.claude/agents/minerva-notion-oracle.md
 readlink ~/.claude/agents/clio-docs-oracle.md
+
+# Verify command symlinks
+readlink ~/.claude/commands/gemini.md
 ```
