@@ -136,9 +136,10 @@ Athena: Performs final review synthesis
 - Understanding project-wide architecture
 
 ### Jira Board Status (`commands/jira-status.md`)
-- Returns full sprint board status with tickets grouped by column
+- Returns focused sprint board status with tickets grouped by actionable sections
 - Pre-processes data with jq to minimize token usage (follows code execution optimization pattern)
-- Returns formatted markdown tables ready for display
+- Shows sesh/tmux session indicator (✓/-) for each ticket
+- Supports letter indexing (A, B, C...) for easy ticket reference
 - Invoked via `/jira-status` slash command
 
 **Usage examples:**
@@ -148,9 +149,16 @@ Athena: Performs final review synthesis
 ```
 
 **What it returns:**
-- All tickets in active sprint grouped by status
-- Each ticket shows: key, summary (truncated), assignee, priority
-- Ticket count per status column
+- **In Progress (My Work)**: Your current work
+- **Ready For Review (To Review)**: Others' tickets to review
+- **Has Review (My PRs)**: Your PRs that have been reviewed
+- **To Do**: All unstarted tickets
+- **Sesh column**: ✓ if session exists, - otherwise
+
+**Interactive features:**
+- Reference tickets by letter (e.g., "switch to G", "tell me about C")
+- Auto-switches to sesh session if one exists
+- Creates worktree via hephaestus agent if no session (review worktree for others' PRs)
 
 ## Important Implementation Details
 
