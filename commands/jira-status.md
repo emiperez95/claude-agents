@@ -116,6 +116,39 @@ Example output format:
 | C | CSD-789 | Feature Z | Juan | ✓ |
 ```
 
+## Session Switching
+
+When the user references a letter (e.g., "switch to A", "go to G", or just "A"):
+
+### If the ticket has a session (✓)
+
+Switch to that session:
+
+```bash
+# Find the sesh session containing the ticket ID and connect to it
+# sesh connect handles both running and configured-but-not-running sessions
+SESSION=$(sesh list -c -t 2>/dev/null | grep -m1 'TICKET-ID')
+if [ -n "$SESSION" ]; then
+  sesh connect "$SESSION"
+fi
+```
+
+Replace `TICKET-ID` with the actual ticket key (e.g., CSD-2403).
+
+### If the ticket has no session (-)
+
+Use the hephaestus-workspace-forge agent to create a worktree and session:
+
+```
+Task tool with subagent_type="hephaestus-workspace-forge"
+Prompt: "Create a worktree for TICKET-ID"
+```
+
+The agent will:
+1. Create a git worktree for the ticket branch
+2. Configure a sesh session for the worktree
+3. Optionally switch to the new session when done
+
 ## Requirements
 
 - `acli` CLI must be authenticated (`acli jira auth status`)
