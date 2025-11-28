@@ -16,46 +16,28 @@ Parse user input to identify the PR:
 - **Current branch**: Run `gh pr view --json number --jq '.number'`
 - **No PR found**: Extract Jira from branch with `git branch --show-current | grep -oE '[A-Z]+-[0-9]+'`
 
-### 2. Setup Working Directory
+### 2. Gather Data (Script)
+
+Run the gather-context script which collects all data in parallel:
 
 ```bash
-WORK_DIR="/tmp/athena-review-${PR_NUM}"
-mkdir -p "${WORK_DIR}/reviews"
+./scripts/gather-context.sh ${PR_NUM} ${JIRA_TICKET}
 ```
 
-### 3. Gather Data (Parallel)
+This script:
+- Creates work directory at `/tmp/athena-review-${PR_NUM}/`
+- Fetches PR metadata, diff, Jira ticket, and epic context in parallel
+- Writes combined context to `${WORK_DIR}/context.md`
+- Writes diff to `${WORK_DIR}/diff.patch`
 
-Execute these in parallel using the Task tool:
+Output files:
+- `context.md` - Combined PR + Jira JSON data
+- `diff.patch` - Full PR diff
+- `pr.json` - Raw PR metadata
+- `jira.json` - Raw Jira ticket data
+- `epic.json` - Epic context (if linked)
 
-| Agent | Prompt |
-|-------|--------|
-| atlas-jira-analyst | "Get context for {JIRA_TICKET}" |
-| hermes-pr-courier | "Get content for PR {PR_NUM}" |
-| heimdall-pr-guardian | "Get status for PR {PR_NUM}" |
-
-Also get the diff:
-```bash
-gh pr diff ${PR_NUM} > "${WORK_DIR}/diff.patch"
-```
-
-### 4. Write Context File
-
-Write gathered data to `${WORK_DIR}/context.md`:
-
-```markdown
-# PR Review Context
-
-## Jira Requirements
-{atlas_output}
-
-## PR Metadata
-{hermes_output}
-
-## Current Status
-{heimdall_output}
-```
-
-### 5. Run Reviews (Parallel)
+### 3. Run Reviews (Parallel)
 
 Execute Gemini and Claude reviews in parallel:
 
@@ -100,7 +82,7 @@ Output as structured markdown."
 Save output to: ${WORK_DIR}/reviews/claude.md
 ```
 
-### 6. Aggregate Reviews
+### 4. Aggregate Reviews
 
 Read both review files and combine findings:
 
@@ -115,7 +97,7 @@ Read both review files and combine findings:
 
 Deduplicate similar findings, noting which reviewer(s) flagged each.
 
-### 7. Synthesize Actionable Items
+### 5. Synthesize Actionable Items
 
 Present combined review to user:
 
