@@ -10,10 +10,12 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOCAL_AGENTS_DIR="${SCRIPT_DIR}/agents"
 LOCAL_COMMANDS_DIR="${SCRIPT_DIR}/commands"
+LOCAL_SKILLS_DIR="${SCRIPT_DIR}/skills"
 
 # Global directories
 GLOBAL_AGENTS_DIR="$HOME/.claude/agents"
 GLOBAL_COMMANDS_DIR="$HOME/.claude/commands"
+GLOBAL_SKILLS_DIR="$HOME/.claude/skills"
 
 # Our agents
 AGENTS=(
@@ -31,6 +33,11 @@ AGENTS=(
 COMMANDS=(
     "gemini.md"
     "jira-status.md"
+)
+
+# Our skills (folders, not files)
+SKILLS=(
+    "athena-pr-reviewer"
 )
 
 # Check for --force flag
@@ -55,6 +62,12 @@ if [[ ! -d "$LOCAL_COMMANDS_DIR" ]]; then
     LOCAL_COMMANDS_DIR=""
 fi
 
+if [[ ! -d "$LOCAL_SKILLS_DIR" ]]; then
+    echo -e "${YELLOW}Warning: Local skills directory not found at $LOCAL_SKILLS_DIR${NC}"
+    echo "Skipping skills installation..."
+    LOCAL_SKILLS_DIR=""
+fi
+
 # Create global directories if they don't exist
 if [[ ! -d "$GLOBAL_AGENTS_DIR" ]]; then
     echo "Creating global agents directory at $GLOBAL_AGENTS_DIR"
@@ -66,11 +79,20 @@ if [[ -n "$LOCAL_COMMANDS_DIR" ]] && [[ ! -d "$GLOBAL_COMMANDS_DIR" ]]; then
     mkdir -p "$GLOBAL_COMMANDS_DIR"
 fi
 
+if [[ -n "$LOCAL_SKILLS_DIR" ]] && [[ ! -d "$GLOBAL_SKILLS_DIR" ]]; then
+    echo "Creating global skills directory at $GLOBAL_SKILLS_DIR"
+    mkdir -p "$GLOBAL_SKILLS_DIR"
+fi
+
 echo "Local agents directory: $LOCAL_AGENTS_DIR"
 echo "Global agents directory: $GLOBAL_AGENTS_DIR"
 if [[ -n "$LOCAL_COMMANDS_DIR" ]]; then
     echo "Local commands directory: $LOCAL_COMMANDS_DIR"
     echo "Global commands directory: $GLOBAL_COMMANDS_DIR"
+fi
+if [[ -n "$LOCAL_SKILLS_DIR" ]]; then
+    echo "Local skills directory: $LOCAL_SKILLS_DIR"
+    echo "Global skills directory: $GLOBAL_SKILLS_DIR"
 fi
 echo ""
 
@@ -88,6 +110,16 @@ if [[ -n "$LOCAL_COMMANDS_DIR" ]]; then
     for command in "${COMMANDS[@]}"; do
         if [[ -e "$GLOBAL_COMMANDS_DIR/$command" ]]; then
             existing_commands+=("$command")
+        fi
+    done
+fi
+
+# Check if skills already exist
+existing_skills=()
+if [[ -n "$LOCAL_SKILLS_DIR" ]]; then
+    for skill in "${SKILLS[@]}"; do
+        if [[ -e "$GLOBAL_SKILLS_DIR/$skill" ]]; then
+            existing_skills+=("$skill")
         fi
     done
 fi
@@ -112,6 +144,15 @@ if [[ ${#existing_commands[@]} -gt 0 ]]; then
     has_existing=true
 fi
 
+if [[ ${#existing_skills[@]} -gt 0 ]]; then
+    echo -e "${YELLOW}Found existing skills in global directory:${NC}"
+    for skill in "${existing_skills[@]}"; do
+        echo "  - $skill"
+    done
+    echo ""
+    has_existing=true
+fi
+
 if [[ "$has_existing" == true ]]; then
     if [[ "$FORCE" == false ]]; then
         echo -e "${RED}Error: Files already exist in global directories.${NC}"
@@ -127,6 +168,10 @@ if [[ "$has_existing" == true ]]; then
         for command in "${existing_commands[@]}"; do
             rm -f "$GLOBAL_COMMANDS_DIR/$command"
             echo "  Removed command: $command"
+        done
+        for skill in "${existing_skills[@]}"; do
+            rm -rf "$GLOBAL_SKILLS_DIR/$skill"
+            echo "  Removed skill: $skill"
         done
         echo ""
     fi
@@ -186,6 +231,35 @@ if [[ -n "$LOCAL_COMMANDS_DIR" ]] && [[ ${#COMMANDS[@]} -gt 0 ]]; then
     done
 fi
 
+# Install skills as folder-level symbolic links
+skills_success=0
+skills_fail=0
+
+if [[ -n "$LOCAL_SKILLS_DIR" ]] && [[ ${#SKILLS[@]} -gt 0 ]]; then
+    echo ""
+    echo "Installing skills as folder-level symbolic links..."
+
+    for skill in "${SKILLS[@]}"; do
+        local_path="$LOCAL_SKILLS_DIR/$skill"
+        global_path="$GLOBAL_SKILLS_DIR/$skill"
+
+        if [[ ! -d "$local_path" ]]; then
+            echo -e "${RED}  ✗ $skill - Local folder not found${NC}"
+            ((skills_fail++))
+            continue
+        fi
+
+        # Create folder-level symbolic link
+        if ln -s "$local_path" "$global_path" 2>/dev/null; then
+            echo -e "${GREEN}  ✓ $skill${NC}"
+            ((skills_success++))
+        else
+            echo -e "${RED}  ✗ $skill - Failed to create symbolic link${NC}"
+            ((skills_fail++))
+        fi
+    done
+fi
+
 echo ""
 echo "Installation Summary"
 echo "==================="
@@ -201,14 +275,21 @@ if [[ -n "$LOCAL_COMMANDS_DIR" ]]; then
     fi
 fi
 
-total_fail=$((agents_fail + commands_fail))
+if [[ -n "$LOCAL_SKILLS_DIR" ]]; then
+    echo -e "${GREEN}Successfully installed: $skills_success skills${NC}"
+    if [[ $skills_fail -gt 0 ]]; then
+        echo -e "${RED}Failed to install: $skills_fail skills${NC}"
+    fi
+fi
+
+total_fail=$((agents_fail + commands_fail + skills_fail))
 if [[ $total_fail -eq 0 ]]; then
     echo ""
-    echo "All agents and commands have been successfully linked!"
+    echo "All agents, commands, and skills have been successfully linked!"
     echo ""
-    echo "Note: Files are installed as file-level symlinks."
-    echo "You can manually add other files to ~/.claude/agents/ or ~/.claude/commands/ if needed."
-    echo "Restart your Claude Code terminal to load the new agents and commands."
+    echo "Note: Agents and commands are file-level symlinks, skills are folder-level symlinks."
+    echo "You can manually add other files to ~/.claude/agents/, ~/.claude/commands/, or ~/.claude/skills/ if needed."
+    echo "Restart your Claude Code terminal to load the new agents, commands, and skills."
 fi
 
 if [[ $total_fail -gt 0 ]]; then
