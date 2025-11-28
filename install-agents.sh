@@ -30,6 +30,7 @@ AGENTS=(
 # Our commands
 COMMANDS=(
     "gemini.md"
+    "jira-status.md"
 )
 
 # Check for --force flag

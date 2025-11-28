@@ -25,6 +25,7 @@ AGENTS=(
 # Our commands
 COMMANDS=(
     "gemini.md"
+    "jira-status.md"
 )
 
 echo "Claude Agents & Commands Uninstaller"

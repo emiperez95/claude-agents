@@ -22,7 +22,7 @@ It also includes slash commands for extending Claude Code's capabilities with ex
 
 # Verify installation
 ls -la ~/.claude/agents/ | grep -E "(atlas|apollo|heimdall|hermes|athena|minerva|hephaestus|clio)"
-ls -la ~/.claude/commands/ | grep gemini
+ls -la ~/.claude/commands/ | grep -E "(gemini|jira-status)"
 ```
 
 ## Agent Architecture
@@ -135,6 +135,23 @@ Athena: Performs final review synthesis
 - Verifying if features/patterns are implemented across the codebase
 - Understanding project-wide architecture
 
+### Jira Board Status (`commands/jira-status.md`)
+- Returns full sprint board status with tickets grouped by column
+- Pre-processes data with jq to minimize token usage (follows code execution optimization pattern)
+- Returns formatted markdown tables ready for display
+- Invoked via `/jira-status` slash command
+
+**Usage examples:**
+```bash
+/jira-status           # Default project (CSD)
+/jira-status PROJ      # Specific project
+```
+
+**What it returns:**
+- All tickets in active sprint grouped by status
+- Each ticket shows: key, summary (truncated), assignee, priority
+- Ticket count per status column
+
 ## Important Implementation Details
 
 ### GitHub CLI Commands for PR Agents
@@ -228,6 +245,8 @@ After installation, restart Claude Code terminal and test with:
 ### Testing Commands
 After installation, restart Claude Code terminal and test with:
 - `/gemini @src/ Analyze the codebase architecture` → should execute gemini command
+- `/jira-status` → should return board status for CSD project
+- `/jira-status PROJ` → should return board status for specified project
 
 ## Requirements Verification
 
@@ -264,4 +283,5 @@ readlink ~/.claude/agents/clio-docs-oracle.md
 
 # Verify command symlinks
 readlink ~/.claude/commands/gemini.md
+readlink ~/.claude/commands/jira-status.md
 ```
