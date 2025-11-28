@@ -26,9 +26,12 @@ if [ -z "$CURRENT_USER" ]; then
   CURRENT_USER="__NO_MATCH__"
 fi
 
+# Get list of sesh sessions for session indicator
+SESH_LIST=$(sesh-cmd list 2>/dev/null || echo "")
+
 acli jira workitem search \
   --jql "project = $PROJECT AND sprint in openSprints() ORDER BY status ASC, updated DESC" \
-  --json --paginate 2>/dev/null | jq -r --arg user "$CURRENT_USER" '
+  --json --paginate 2>/dev/null | jq -r --arg user "$CURRENT_USER" --arg sesh "$SESH_LIST" '
 
 [
   # In Progress - only my tickets
@@ -36,7 +39,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "In Progress (My Work)",
      show_assignee: false,
-     tickets: map({key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # Ready For Review - only others (for me to review)
@@ -44,7 +47,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "Ready For Review (To Review)",
      show_assignee: true,
-     tickets: map({key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned")})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned"), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # Has Review - only my tickets
@@ -52,7 +55,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "Has Review (My PRs)",
      show_assignee: false,
-     tickets: map({key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # To Do - all tickets
@@ -60,17 +63,17 @@ acli jira workitem search \
    if length > 0 then {
      status: "To Do",
      show_assignee: true,
-     tickets: map({key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned")})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned"), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
    } else empty end)
 ] |
 
 .[] |
 if .show_assignee then
-  "## \(.status) (\(.tickets | length))\n| Key | Summary | Assignee |\n|-----|---------|----------|\n" +
-  (.tickets | map("| \(.key) | \(.summary) | \(.assignee) |") | join("\n")) + "\n"
+  "## \(.status) (\(.tickets | length))\n| Key | Summary | Assignee | Sesh |\n|-----|---------|----------|------|\n" +
+  (.tickets | map("| \(.key) | \(.summary) | \(.assignee) | \(.sesh) |") | join("\n")) + "\n"
 else
-  "## \(.status) (\(.tickets | length))\n| Key | Summary |\n|-----|---------|" +
-  (.tickets | map("\n| \(.key) | \(.summary) |") | join("")) + "\n"
+  "## \(.status) (\(.tickets | length))\n| Key | Summary | Sesh |\n|-----|---------|------|\n" +
+  (.tickets | map("| \(.key) | \(.summary) | \(.sesh) |") | join("\n")) + "\n"
 end
 '
 ```
@@ -93,8 +96,28 @@ end
 - **Ready For Review (To Review)**: Others' tickets waiting for code review
 - **Has Review (My PRs)**: Your tickets that have received reviews
 - **To Do**: All tickets not yet started (for picking up work)
+- **Sesh column**: Shows ✓ if a sesh/tmux session exists for the ticket, - otherwise
+
+## Presentation Instructions
+
+When presenting results to the user, add letter indices (A, B, C, ...) to each ticket continuously across all sections. This allows the user to reference tickets by letter (e.g., "tell me about C" or "start working on F").
+
+Example output format:
+```
+## In Progress (My Work) (2)
+| # | Key | Summary | Sesh |
+|---|-----|---------|------|
+| A | CSD-123 | Feature X | ✓ |
+| B | CSD-456 | Bug fix Y | - |
+
+## Ready For Review (To Review) (1)
+| # | Key | Summary | Assignee | Sesh |
+|---|-----|---------|----------|------|
+| C | CSD-789 | Feature Z | Juan | ✓ |
+```
 
 ## Requirements
 
 - `acli` CLI must be authenticated (`acli jira auth status`)
+- `sesh-cmd` for session indicator (optional, gracefully degrades)
 - User must have access to the specified project
