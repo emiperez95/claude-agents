@@ -21,7 +21,7 @@ Parse user input to identify the PR:
 Run the gather-context script which collects all data in parallel:
 
 ```bash
-./scripts/gather-context.sh ${PR_NUM} ${JIRA_TICKET}
+~/.claude/skills/athena-pr-reviewer/scripts/gather-context.sh ${PR_NUM} ${JIRA_TICKET}
 ```
 
 This script:
@@ -39,11 +39,11 @@ Output files:
 
 ### 3. Run Reviews (Parallel)
 
-Execute Gemini and Claude reviews in parallel:
+Execute Gemini, Codex, and Claude reviews in parallel:
 
 **Gemini Review:**
 ```bash
-gemini -p "You are a senior code reviewer. Review this PR against the requirements.
+ASDF_NODEJS_VERSION=22.20.0 gemini -p "You are a senior code reviewer. Review this PR against the requirements.
 
 @${WORK_DIR}/context.md
 @${WORK_DIR}/diff.patch
@@ -54,6 +54,32 @@ LOW PRIORITY: merge conflicts (note if present, but focus on code quality).
 For each finding specify: file, line, severity (Critical/High/Medium/Low), description, suggested fix.
 
 Output as structured markdown." > "${WORK_DIR}/reviews/gemini.md"
+```
+
+**Codex Review:**
+```bash
+codex exec "You are a senior code reviewer. Review this PR against the requirements.
+
+Read context.md for Jira requirements and PR metadata.
+Read diff.patch for the actual code changes.
+
+IGNORE: approval status, rebase needs.
+LOW PRIORITY: merge conflicts (note if present, but focus on code quality).
+
+Analyze:
+1. Requirements alignment - does code fulfill acceptance criteria?
+2. Code quality - patterns, readability, maintainability
+3. Potential bugs - edge cases, error handling
+4. Security concerns - input validation, auth, data exposure
+5. Performance - inefficiencies, N+1 queries
+6. Test coverage - are changes tested?
+
+For each finding specify: file, line, severity (Critical/High/Medium/Low), description, suggested fix.
+
+Output as structured markdown." \
+  -C "${WORK_DIR}" \
+  --skip-git-repo-check \
+  -o "${WORK_DIR}/reviews/codex.md"
 ```
 
 **Claude Subagent Review:**
@@ -84,18 +110,19 @@ Save output to: ${WORK_DIR}/reviews/claude.md
 
 ### 4. Aggregate Reviews
 
-Read both review files and combine findings:
+Read all three review files and combine findings:
 
-**Priority Boost Rule:** Items flagged by BOTH reviewers get bumped up one severity level.
+**Priority Boost Rule:** Items flagged by 2+ reviewers get bumped up one severity level.
 
-| Gemini | Claude | Final Severity |
-|--------|--------|----------------|
-| High   | High   | Critical       |
-| Medium | Medium | High           |
-| Low    | Low    | Medium         |
-| High   | -      | High (no boost)|
+| Reviewers | Original | Final Severity |
+|-----------|----------|----------------|
+| 3/3       | High     | Critical       |
+| 2/3       | High     | Critical       |
+| 3/3       | Medium   | High           |
+| 2/3       | Medium   | High           |
+| 1/3       | High     | High (no boost)|
 
-Deduplicate similar findings, noting which reviewer(s) flagged each.
+Deduplicate similar findings, noting which reviewer(s) flagged each: [Gemini], [Codex], [Claude].
 
 ### 5. Synthesize Actionable Items
 
@@ -111,20 +138,21 @@ Present combined review to user:
 ## Action Items
 
 ### Critical (consensus)
-- [ ] file:line - issue - fix [Gemini + Claude]
+- [ ] file:line - issue - fix [Gemini + Codex + Claude] (3/3)
 
 ### High Priority
-- [ ] file:line - issue - fix [Gemini + Claude] ← boosted
-- [ ] file:line - issue - fix [Gemini]
+- [ ] file:line - issue - fix [Gemini + Codex] ← boosted (2/3)
+- [ ] file:line - issue - fix [Claude]
 
 ### Medium Priority
-- [ ] file:line - issue - fix [Claude]
+- [ ] file:line - issue - fix [Codex]
 
 ### Suggestions
 - improvements
 
 ## Review Sources
 - Gemini: ${WORK_DIR}/reviews/gemini.md
+- Codex: ${WORK_DIR}/reviews/codex.md
 - Claude: ${WORK_DIR}/reviews/claude.md
 
 ## Recommendation: APPROVE / REQUEST_CHANGES
@@ -134,18 +162,18 @@ Present combined review to user:
 
 **User:** "Review PR 456"
 - Detect PR 456, find linked Jira ticket
-- Gather context from all 3 agents in parallel
-- Run Gemini + Claude reviews in parallel
-- Aggregate findings, boost consensus items
+- Gather context via script (parallel CLI calls)
+- Run Gemini + Codex + Claude reviews in parallel
+- Aggregate findings, boost items flagged by 2+ reviewers
 - Present actionable summary
 
 **User:** "Review CSD-123"
 - Find PR linked to CSD-123
 - Gather context including acceptance criteria
-- Parallel reviews against requirements
+- 3 parallel reviews against requirements
 - Present findings with reviewer attribution
 
 **User:** "Review this branch"
 - Get PR from current branch
 - Extract Jira from branch name if needed
-- Full multi-reviewer workflow
+- Full 3-reviewer workflow
