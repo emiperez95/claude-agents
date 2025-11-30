@@ -26,16 +26,19 @@ Run the gather-context script which collects all data in parallel:
 
 This script:
 - Creates work directory at `/tmp/athena-review-${PR_NUM}/`
-- Fetches PR metadata, diff, Jira ticket, and epic context in parallel
+- Fetches in parallel: PR metadata, diff, Jira ticket, epic, CLAUDE.md guidelines, git blame, prior PR comments
 - Writes combined context to `${WORK_DIR}/context.md`
 - Writes diff to `${WORK_DIR}/diff.patch`
 
 Output files:
-- `context.md` - Combined PR + Jira JSON data
+- `context.md` - Combined PR + Jira + guidelines + history data
 - `diff.patch` - Full PR diff
 - `pr.json` - Raw PR metadata
 - `jira.json` - Raw Jira ticket data
 - `epic.json` - Epic context (if linked)
+- `guidelines.md` - All CLAUDE.md files from repo
+- `blame.md` - Git blame for changed files (who wrote what, when)
+- `prior-comments.md` - Comments from past PRs touching same files
 
 ### 3. Run Reviews (Parallel)
 
