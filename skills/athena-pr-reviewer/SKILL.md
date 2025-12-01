@@ -85,47 +85,66 @@ Output as structured markdown." \
   -o "${WORK_DIR}/reviews/codex.md"
 ```
 
-**Claude Subagent Review:**
+**Claude Specialized Reviews (6 agents in parallel):**
+
+Each agent reads its prompt file, then analyzes `${WORK_DIR}/context.md` and `${WORK_DIR}/diff.patch`.
+
 ```
 Task: general-purpose
-Prompt: "You are a senior code reviewer. Review this PR against the requirements.
+Prompt: "Read ~/.claude/skills/athena-pr-reviewer/prompts/comment-analyzer.md for instructions.
+Then read ${WORK_DIR}/context.md and ${WORK_DIR}/diff.patch. Perform the review. Output markdown."
+Save to: ${WORK_DIR}/reviews/claude-comments.md
 
-Read ${WORK_DIR}/context.md for Jira requirements and PR metadata.
-Read ${WORK_DIR}/diff.patch for the actual code changes.
+Task: general-purpose
+Prompt: "Read ~/.claude/skills/athena-pr-reviewer/prompts/test-analyzer.md for instructions.
+Then read ${WORK_DIR}/context.md and ${WORK_DIR}/diff.patch. Perform the review. Output markdown."
+Save to: ${WORK_DIR}/reviews/claude-tests.md
 
-IGNORE: approval status, rebase needs.
-LOW PRIORITY: merge conflicts (note if present, but focus on code quality).
+Task: general-purpose
+Prompt: "Read ~/.claude/skills/athena-pr-reviewer/prompts/error-hunter.md for instructions.
+Then read ${WORK_DIR}/context.md and ${WORK_DIR}/diff.patch. Perform the review. Output markdown."
+Save to: ${WORK_DIR}/reviews/claude-errors.md
 
-Analyze:
-1. Requirements alignment - does code fulfill acceptance criteria?
-2. Code quality - patterns, readability, maintainability
-3. Potential bugs - edge cases, error handling
-4. Security concerns - input validation, auth, data exposure
-5. Performance - inefficiencies, N+1 queries
-6. Test coverage - are changes tested?
+Task: general-purpose
+Prompt: "Read ~/.claude/skills/athena-pr-reviewer/prompts/type-reviewer.md for instructions.
+Then read ${WORK_DIR}/context.md and ${WORK_DIR}/diff.patch. Perform the review. Output markdown."
+Save to: ${WORK_DIR}/reviews/claude-types.md
 
-For each finding specify: file, line, severity (Critical/High/Medium/Low), description, suggested fix.
+Task: general-purpose
+Prompt: "Read ~/.claude/skills/athena-pr-reviewer/prompts/code-reviewer.md for instructions.
+Then read ${WORK_DIR}/context.md and ${WORK_DIR}/diff.patch. Perform the review. Output markdown."
+Save to: ${WORK_DIR}/reviews/claude-general.md
 
-Output as structured markdown."
-
-Save output to: ${WORK_DIR}/reviews/claude.md
+Task: general-purpose
+Prompt: "Read ~/.claude/skills/athena-pr-reviewer/prompts/simplifier.md for instructions.
+Then read ${WORK_DIR}/context.md and ${WORK_DIR}/diff.patch. Perform the review. Output markdown."
+Save to: ${WORK_DIR}/reviews/claude-simplify.md
 ```
 
 ### 4. Aggregate Reviews
 
-Read all three review files and combine findings:
+Read all 8 review files and combine findings:
+
+**Reviewers:**
+- Gemini (general)
+- Codex (general)
+- Claude: comments, tests, errors, types, general, simplify
+
+**Confidence Filtering:**
+- Drop findings with confidence < 80
+- Keep findings 50-79 only if flagged by 2+ reviewers
 
 **Priority Boost Rule:** Items flagged by 2+ reviewers get bumped up one severity level.
 
 | Reviewers | Original | Final Severity |
 |-----------|----------|----------------|
-| 3/3       | High     | Critical       |
-| 2/3       | High     | Critical       |
-| 3/3       | Medium   | High           |
-| 2/3       | Medium   | High           |
-| 1/3       | High     | High (no boost)|
+| 3+        | High     | Critical       |
+| 2         | High     | Critical       |
+| 3+        | Medium   | High           |
+| 2         | Medium   | High           |
+| 1         | Any      | No boost       |
 
-Deduplicate similar findings, noting which reviewer(s) flagged each: [Gemini], [Codex], [Claude].
+Deduplicate similar findings, noting which reviewer(s) flagged each and average confidence.
 
 ### 5. Synthesize Actionable Items
 
@@ -141,14 +160,14 @@ Present combined review to user:
 ## Action Items
 
 ### Critical (consensus)
-- [ ] file:line - issue - fix [Gemini + Codex + Claude] (3/3)
+- [ ] file:line - issue - fix [Gemini + Codex + Claude-errors] (3+, avg 92%)
 
 ### High Priority
-- [ ] file:line - issue - fix [Gemini + Codex] ← boosted (2/3)
-- [ ] file:line - issue - fix [Claude]
+- [ ] file:line - issue - fix [Gemini + Claude-tests] ← boosted (2, avg 85%)
+- [ ] file:line - issue - fix [Claude-types] (95%)
 
 ### Medium Priority
-- [ ] file:line - issue - fix [Codex]
+- [ ] file:line - issue - fix [Claude-simplify] (88%)
 
 ### Suggestions
 - improvements
@@ -156,7 +175,12 @@ Present combined review to user:
 ## Review Sources
 - Gemini: ${WORK_DIR}/reviews/gemini.md
 - Codex: ${WORK_DIR}/reviews/codex.md
-- Claude: ${WORK_DIR}/reviews/claude.md
+- Claude Comments: ${WORK_DIR}/reviews/claude-comments.md
+- Claude Tests: ${WORK_DIR}/reviews/claude-tests.md
+- Claude Errors: ${WORK_DIR}/reviews/claude-errors.md
+- Claude Types: ${WORK_DIR}/reviews/claude-types.md
+- Claude General: ${WORK_DIR}/reviews/claude-general.md
+- Claude Simplify: ${WORK_DIR}/reviews/claude-simplify.md
 
 ## Recommendation: APPROVE / REQUEST_CHANGES
 ```
@@ -166,17 +190,17 @@ Present combined review to user:
 **User:** "Review PR 456"
 - Detect PR 456, find linked Jira ticket
 - Gather context via script (parallel CLI calls)
-- Run Gemini + Codex + Claude reviews in parallel
+- Run 8 reviews in parallel (Gemini, Codex, 6 Claude specialists)
 - Aggregate findings, boost items flagged by 2+ reviewers
 - Present actionable summary
 
 **User:** "Review CSD-123"
 - Find PR linked to CSD-123
 - Gather context including acceptance criteria
-- 3 parallel reviews against requirements
+- 8 parallel reviews (general + specialized)
 - Present findings with reviewer attribution
 
 **User:** "Review this branch"
 - Get PR from current branch
 - Extract Jira from branch name if needed
-- Full 3-reviewer workflow
+- Full 8-reviewer workflow
