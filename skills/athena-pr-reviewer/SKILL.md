@@ -40,52 +40,31 @@ Output files:
 - `blame.md` - Git blame for changed files (who wrote what, when)
 - `prior-comments.md` - Comments from past PRs touching same files
 
-### 3. Run Reviews (Parallel)
+### 3. Run Reviews (All 8 in Parallel)
 
-Execute Gemini, Codex, and Claude reviews in parallel:
+Execute all 8 reviews simultaneously in a SINGLE message:
 
-**Gemini Review:**
+**In ONE message, run:**
+
+1. **Bash (background):** Start Gemini + Codex script with `run_in_background: true`
 ```bash
-ASDF_NODEJS_VERSION=22.20.0 gemini -p "You are a senior code reviewer. Review this PR against the requirements.
-
-@${WORK_DIR}/context.md
-@${WORK_DIR}/diff.patch
-
-IGNORE: approval status, rebase needs.
-LOW PRIORITY: merge conflicts (note if present, but focus on code quality).
-
-For each finding specify: file, line, severity (Critical/High/Medium/Low), description, suggested fix.
-
-Output as structured markdown." > "${WORK_DIR}/reviews/gemini.md"
+~/.claude/skills/athena-pr-reviewer/scripts/run-reviews.sh ${WORK_DIR}
 ```
 
-**Codex Review:**
-```bash
-codex exec "You are a senior code reviewer. Review this PR against the requirements.
+2. **6 Task calls:** Run all Claude specialists in parallel
 
-Read context.md for Jira requirements and PR metadata.
-Read diff.patch for the actual code changes.
+This launches all 8 reviews at once:
+- Gemini + Codex run in background bash
+- 6 Claude agents run as parallel Task calls
 
-IGNORE: approval status, rebase needs.
-LOW PRIORITY: merge conflicts (note if present, but focus on code quality).
+**After Claude agents complete:** Use BashOutput to check if Gemini/Codex finished.
 
-Analyze:
-1. Requirements alignment - does code fulfill acceptance criteria?
-2. Code quality - patterns, readability, maintainability
-3. Potential bugs - edge cases, error handling
-4. Security concerns - input validation, auth, data exposure
-5. Performance - inefficiencies, N+1 queries
-6. Test coverage - are changes tested?
+Output files:
+- `${WORK_DIR}/reviews/gemini.md`
+- `${WORK_DIR}/reviews/codex.md`
+- `${WORK_DIR}/reviews/claude-*.md` (6 files)
 
-For each finding specify: file, line, severity (Critical/High/Medium/Low), description, suggested fix.
-
-Output as structured markdown." \
-  -C "${WORK_DIR}" \
-  --skip-git-repo-check \
-  -o "${WORK_DIR}/reviews/codex.md"
-```
-
-**Claude Specialized Reviews (6 agents in parallel):**
+**Claude Specialized Reviews (6 agents)**
 
 Each agent reads its prompt file, then analyzes `${WORK_DIR}/context.md` and `${WORK_DIR}/diff.patch`.
 
