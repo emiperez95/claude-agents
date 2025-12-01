@@ -1,0 +1,7 @@
+{
+  "name": "agent-workflow-marketplace",
+  "description": "Workflow automation agents for Jira, GitHub, Notion, and Google Drive",
+  "plugins": [
+    { "source": "./" }
+  ]
+}

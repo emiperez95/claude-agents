@@ -10,13 +10,20 @@ Additionally, this repository includes slash commands that extend Claude Code's 
 
 ## Quick Start
 
-1. Clone this repository
-2. Run the installer:
-   ```bash
-   ./install-agents.sh
-   ```
-3. Restart your Claude Code terminal
-4. The agents will now automatically activate when you mention relevant keywords
+### Plugin Installation (Recommended)
+```bash
+/plugin marketplace add emilianoperez/agent-workflow
+/plugin install agent-workflow
+```
+
+### Alternative: Symlink Installation
+```bash
+git clone https://github.com/emilianoperez/agent-workflow.git
+cd agent-workflow
+./install-agents.sh
+```
+
+Restart your Claude Code terminal. The agents will automatically activate when you mention relevant keywords.
 
 ## Agents
 
@@ -60,7 +67,20 @@ Leverages Gemini's massive context window for large codebase analysis. Use `/gem
 
 ## Installation
 
-### Install Agents & Commands
+### Plugin Installation (Recommended)
+Install via Claude Code's plugin system:
+```bash
+/plugin marketplace add emilianoperez/agent-workflow
+/plugin install agent-workflow
+```
+
+To uninstall:
+```bash
+/plugin uninstall agent-workflow
+```
+
+### Symlink Installation (Alternative)
+For development or offline use:
 ```bash
 # Normal installation (fails if agents/commands already exist)
 ./install-agents.sh
@@ -69,9 +89,9 @@ Leverages Gemini's massive context window for large codebase analysis. Use `/gem
 ./install-agents.sh --force
 ```
 
-The installer creates symbolic links from the global Claude directories (`~/.claude/agents/` and `~/.claude/commands/`) to your local copies, ensuring any updates you make are immediately available globally.
+The installer creates symbolic links from the global Claude directories (`~/.claude/agents/`, `~/.claude/commands/`, `~/.claude/skills/`) to your local copies, ensuring any updates you make are immediately available globally.
 
-### Uninstall Agents & Commands
+To uninstall:
 ```bash
 ./uninstall-agents.sh
 ```
@@ -99,6 +119,9 @@ The agents are configured to use:
 
 ```
 .
+├── .claude-plugin/
+│   ├── plugin.json           # Plugin manifest
+│   └── marketplace.json      # Marketplace config
 ├── agents/
 │   ├── atlas-jira-analyst.md
 │   ├── apollo-jira-scribe.md
@@ -109,7 +132,10 @@ The agents are configured to use:
 │   ├── clio-docs-oracle.md
 │   └── hephaestus-workspace-forge.md
 ├── commands/
-│   └── gemini.md
+│   ├── gemini.md
+│   └── jira-status.md
+├── skills/
+│   └── athena-pr-reviewer/   # Multi-LLM PR review skill
 ├── install-agents.sh
 ├── uninstall-agents.sh
 ├── README.md
