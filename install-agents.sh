@@ -21,7 +21,6 @@ GLOBAL_SKILLS_DIR="$HOME/.claude/skills"
 AGENTS=(
     "atlas-jira-analyst.md"
     "apollo-jira-scribe.md"
-    "athena-pr-reviewer.md"
     "heimdall-pr-guardian.md"
     "hermes-pr-courier.md"
     "hephaestus-workspace-forge.md"
