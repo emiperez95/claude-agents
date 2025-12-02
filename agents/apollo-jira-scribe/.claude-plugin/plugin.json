@@ -1,0 +1,11 @@
+{
+  "name": "apollo-jira-scribe",
+  "version": "1.0.0",
+  "description": "Jira ticket creator and updater - creates tickets, transitions states, and assigns to sprints",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["jira", "create", "update", "tickets", "workflow"]
+}

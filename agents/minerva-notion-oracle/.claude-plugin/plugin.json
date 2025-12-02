@@ -1,0 +1,11 @@
+{
+  "name": "minerva-notion-oracle",
+  "version": "1.0.0",
+  "description": "Notion workspace searcher - retrieves documentation, meeting notes, and project information",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["notion", "documentation", "wiki", "knowledge-base"]
+}

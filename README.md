@@ -11,17 +11,37 @@ Additionally, this repository includes slash commands that extend Claude Code's 
 ## Quick Start
 
 ### Plugin Installation (Recommended)
+
+Each agent, command, and skill is a separate plugin. Install only what you need:
+
 ```bash
+# Add the marketplace
 /plugin marketplace add emiperez95/claude-agents
-/plugin install agent-workflow
+
+# Install individual plugins
+/plugin install atlas-jira-analyst          # Jira issue analyzer
+/plugin install apollo-jira-scribe          # Jira ticket creator
+/plugin install heimdall-pr-guardian        # PR status monitor
+/plugin install hermes-pr-courier           # PR content collector
+/plugin install minerva-notion-oracle       # Notion searcher
+/plugin install clio-docs-oracle            # Google Drive reader
+/plugin install hephaestus-workspace-forge  # Workspace manager
+/plugin install gemini-command              # Gemini CLI integration
+/plugin install jira-status-command         # Jira board status
+/plugin install athena-pr-reviewer          # Multi-LLM PR reviewer
 ```
 
-### Alternative: Symlink Installation
+### Alternative: Symlink Installation (for developers)
+
+For development or offline use, the symlink installer provides hot-reload on restart:
+
 ```bash
 git clone https://github.com/emiperez95/claude-agents.git
 cd claude-agents
 ./install-agents.sh
 ```
+
+This installs ALL agents, commands, and skills at once via symlinks.
 
 Restart your Claude Code terminal. The agents will automatically activate when you mention relevant keywords.
 
@@ -74,19 +94,39 @@ Leverages Gemini's massive context window for large codebase analysis. Use `/gem
 ## Installation
 
 ### Plugin Installation (Recommended)
-Install via Claude Code's plugin system:
+
+Install via Claude Code's plugin system. Each component is a separate plugin:
+
 ```bash
+# Add the marketplace first
 /plugin marketplace add emiperez95/claude-agents
-/plugin install agent-workflow
+
+# Then install the plugins you need
+/plugin install <plugin-name>
 ```
+
+Available plugins:
+| Plugin | Description |
+|--------|-------------|
+| `atlas-jira-analyst` | Jira issue context extractor |
+| `apollo-jira-scribe` | Jira ticket creator/updater |
+| `heimdall-pr-guardian` | PR status and comments monitor |
+| `hermes-pr-courier` | PR content collector |
+| `minerva-notion-oracle` | Notion workspace searcher |
+| `clio-docs-oracle` | Google Drive document reader |
+| `hephaestus-workspace-forge` | Git worktree and tmux manager |
+| `gemini-command` | Gemini CLI for codebase analysis |
+| `jira-status-command` | Jira sprint board status |
+| `athena-pr-reviewer` | Multi-LLM PR review skill |
 
 To uninstall:
 ```bash
-/plugin uninstall agent-workflow
+/plugin uninstall <plugin-name>
 ```
 
-### Symlink Installation (Alternative)
-For development or offline use:
+### Symlink Installation (for developers)
+
+For development with hot-reload capability:
 ```bash
 # Normal installation (fails if agents/commands already exist)
 ./install-agents.sh
@@ -95,14 +135,14 @@ For development or offline use:
 ./install-agents.sh --force
 ```
 
-The installer creates symbolic links from the global Claude directories (`~/.claude/agents/`, `~/.claude/commands/`, `~/.claude/skills/`) to your local copies, ensuring any updates you make are immediately available globally.
+The installer auto-discovers plugins and creates symbolic links from the global Claude directories (`~/.claude/agents/`, `~/.claude/commands/`, `~/.claude/skills/`) to your local copies. Changes are immediately available after restarting Claude Code.
 
 To uninstall:
 ```bash
 ./uninstall-agents.sh
 ```
 
-This removes only the symbolic links to these agents and commands, leaving other files untouched.
+This removes only the symbolic links to these agents, commands, and skills, leaving other files untouched.
 
 ## Requirements
 
@@ -126,21 +166,29 @@ The agents are configured to use:
 ```
 .
 ├── .claude-plugin/
-│   ├── plugin.json           # Plugin manifest
-│   └── marketplace.json      # Marketplace config
+│   └── marketplace.json              # Lists all 10 plugins
 ├── agents/
-│   ├── atlas-jira-analyst.md
-│   ├── apollo-jira-scribe.md
-│   ├── heimdall-pr-guardian.md
-│   ├── hermes-pr-courier.md
-│   ├── minerva-notion-oracle.md
-│   ├── clio-docs-oracle.md
-│   └── hephaestus-workspace-forge.md
+│   ├── atlas-jira-analyst/
+│   │   ├── .claude-plugin/plugin.json
+│   │   └── agents/atlas-jira-analyst.md
+│   ├── apollo-jira-scribe/
+│   │   ├── .claude-plugin/plugin.json
+│   │   └── agents/apollo-jira-scribe.md
+│   ├── ... (5 more agents)
 ├── commands/
-│   ├── gemini.md
-│   └── jira-status.md
+│   ├── gemini/
+│   │   ├── .claude-plugin/plugin.json
+│   │   └── commands/gemini.md
+│   ├── jira-status/
+│   │   ├── .claude-plugin/plugin.json
+│   │   └── commands/jira-status.md
 ├── skills/
-│   └── athena-pr-reviewer/   # Multi-LLM PR review skill
+│   └── athena-pr-reviewer/
+│       ├── .claude-plugin/plugin.json
+│       └── skills/athena-pr-reviewer/
+│           ├── SKILL.md
+│           ├── prompts/
+│           └── scripts/
 ├── install-agents.sh
 ├── uninstall-agents.sh
 ├── README.md

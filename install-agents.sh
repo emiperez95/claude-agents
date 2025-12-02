@@ -8,36 +8,11 @@ NC='\033[0m' # No Color
 
 # Script directory (where this script is located)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-LOCAL_AGENTS_DIR="${SCRIPT_DIR}/agents"
-LOCAL_COMMANDS_DIR="${SCRIPT_DIR}/commands"
-LOCAL_SKILLS_DIR="${SCRIPT_DIR}/skills"
 
 # Global directories
 GLOBAL_AGENTS_DIR="$HOME/.claude/agents"
 GLOBAL_COMMANDS_DIR="$HOME/.claude/commands"
 GLOBAL_SKILLS_DIR="$HOME/.claude/skills"
-
-# Our agents
-AGENTS=(
-    "atlas-jira-analyst.md"
-    "apollo-jira-scribe.md"
-    "heimdall-pr-guardian.md"
-    "hermes-pr-courier.md"
-    "hephaestus-workspace-forge.md"
-    "minerva-notion-oracle.md"
-    "clio-docs-oracle.md"
-)
-
-# Our commands
-COMMANDS=(
-    "gemini.md"
-    "jira-status.md"
-)
-
-# Our skills (folders, not files)
-SKILLS=(
-    "athena-pr-reviewer"
-)
 
 # Check for --force flag
 FORCE=false
@@ -49,79 +24,94 @@ echo "Claude Agents & Commands Installer"
 echo "==================================="
 echo ""
 
-# Check if local directories exist
-if [[ ! -d "$LOCAL_AGENTS_DIR" ]]; then
-    echo -e "${RED}Error: Local agents directory not found at $LOCAL_AGENTS_DIR${NC}"
-    exit 1
-fi
+# Auto-discover agents, commands, and skills from the new plugin structure
+# Structure: agents/<plugin-name>/agents/<agent-name>.md
+#            commands/<plugin-name>/commands/<command-name>.md
+#            skills/<plugin-name>/skills/<skill-name>/SKILL.md
 
-if [[ ! -d "$LOCAL_COMMANDS_DIR" ]]; then
-    echo -e "${YELLOW}Warning: Local commands directory not found at $LOCAL_COMMANDS_DIR${NC}"
-    echo "Skipping commands installation..."
-    LOCAL_COMMANDS_DIR=""
-fi
+discover_agents() {
+    local agents=()
+    for plugin_dir in "$SCRIPT_DIR"/agents/*/; do
+        if [[ -d "$plugin_dir/agents" ]]; then
+            for agent_file in "$plugin_dir"/agents/*.md; do
+                if [[ -f "$agent_file" ]]; then
+                    agents+=("$agent_file")
+                fi
+            done
+        fi
+    done
+    echo "${agents[@]}"
+}
 
-if [[ ! -d "$LOCAL_SKILLS_DIR" ]]; then
-    echo -e "${YELLOW}Warning: Local skills directory not found at $LOCAL_SKILLS_DIR${NC}"
-    echo "Skipping skills installation..."
-    LOCAL_SKILLS_DIR=""
-fi
+discover_commands() {
+    local commands=()
+    for plugin_dir in "$SCRIPT_DIR"/commands/*/; do
+        if [[ -d "$plugin_dir/commands" ]]; then
+            for command_file in "$plugin_dir"/commands/*.md; do
+                if [[ -f "$command_file" ]]; then
+                    commands+=("$command_file")
+                fi
+            done
+        fi
+    done
+    echo "${commands[@]}"
+}
 
-# Create global directories if they don't exist
-if [[ ! -d "$GLOBAL_AGENTS_DIR" ]]; then
-    echo "Creating global agents directory at $GLOBAL_AGENTS_DIR"
-    mkdir -p "$GLOBAL_AGENTS_DIR"
-fi
+discover_skills() {
+    local skills=()
+    for plugin_dir in "$SCRIPT_DIR"/skills/*/; do
+        if [[ -d "$plugin_dir/skills" ]]; then
+            for skill_dir in "$plugin_dir"/skills/*/; do
+                if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
+                    skills+=("$skill_dir")
+                fi
+            done
+        fi
+    done
+    echo "${skills[@]}"
+}
 
-if [[ -n "$LOCAL_COMMANDS_DIR" ]] && [[ ! -d "$GLOBAL_COMMANDS_DIR" ]]; then
-    echo "Creating global commands directory at $GLOBAL_COMMANDS_DIR"
-    mkdir -p "$GLOBAL_COMMANDS_DIR"
-fi
+# Discover all plugins
+AGENT_PATHS=($(discover_agents))
+COMMAND_PATHS=($(discover_commands))
+SKILL_PATHS=($(discover_skills))
 
-if [[ -n "$LOCAL_SKILLS_DIR" ]] && [[ ! -d "$GLOBAL_SKILLS_DIR" ]]; then
-    echo "Creating global skills directory at $GLOBAL_SKILLS_DIR"
-    mkdir -p "$GLOBAL_SKILLS_DIR"
-fi
-
-echo "Local agents directory: $LOCAL_AGENTS_DIR"
-echo "Global agents directory: $GLOBAL_AGENTS_DIR"
-if [[ -n "$LOCAL_COMMANDS_DIR" ]]; then
-    echo "Local commands directory: $LOCAL_COMMANDS_DIR"
-    echo "Global commands directory: $GLOBAL_COMMANDS_DIR"
-fi
-if [[ -n "$LOCAL_SKILLS_DIR" ]]; then
-    echo "Local skills directory: $LOCAL_SKILLS_DIR"
-    echo "Global skills directory: $GLOBAL_SKILLS_DIR"
-fi
+echo "Discovered ${#AGENT_PATHS[@]} agents, ${#COMMAND_PATHS[@]} commands, ${#SKILL_PATHS[@]} skills"
 echo ""
 
-# Check if agents already exist
+# Create global directories if they don't exist
+mkdir -p "$GLOBAL_AGENTS_DIR" "$GLOBAL_COMMANDS_DIR" "$GLOBAL_SKILLS_DIR"
+
+# Extract basenames for checking existing files
+get_basename() {
+    basename "$1"
+}
+
+# Check for existing files
 existing_agents=()
-for agent in "${AGENTS[@]}"; do
-    if [[ -e "$GLOBAL_AGENTS_DIR/$agent" ]]; then
-        existing_agents+=("$agent")
+for agent_path in "${AGENT_PATHS[@]}"; do
+    agent_name=$(basename "$agent_path")
+    if [[ -e "$GLOBAL_AGENTS_DIR/$agent_name" ]]; then
+        existing_agents+=("$agent_name")
     fi
 done
 
-# Check if commands already exist
 existing_commands=()
-if [[ -n "$LOCAL_COMMANDS_DIR" ]]; then
-    for command in "${COMMANDS[@]}"; do
-        if [[ -e "$GLOBAL_COMMANDS_DIR/$command" ]]; then
-            existing_commands+=("$command")
-        fi
-    done
-fi
+for command_path in "${COMMAND_PATHS[@]}"; do
+    command_name=$(basename "$command_path")
+    if [[ -e "$GLOBAL_COMMANDS_DIR/$command_name" ]]; then
+        existing_commands+=("$command_name")
+    fi
+done
 
-# Check if skills already exist
 existing_skills=()
-if [[ -n "$LOCAL_SKILLS_DIR" ]]; then
-    for skill in "${SKILLS[@]}"; do
-        if [[ -e "$GLOBAL_SKILLS_DIR/$skill" ]]; then
-            existing_skills+=("$skill")
-        fi
-    done
-fi
+for skill_path in "${SKILL_PATHS[@]}"; do
+    # Remove trailing slash and get basename
+    skill_name=$(basename "${skill_path%/}")
+    if [[ -e "$GLOBAL_SKILLS_DIR/$skill_name" ]]; then
+        existing_skills+=("$skill_name")
+    fi
+done
 
 # Handle existing files
 has_existing=false
@@ -181,22 +171,15 @@ echo "Installing agents as file-level symbolic links..."
 agents_success=0
 agents_fail=0
 
-for agent in "${AGENTS[@]}"; do
-    local_path="$LOCAL_AGENTS_DIR/$agent"
-    global_path="$GLOBAL_AGENTS_DIR/$agent"
+for agent_path in "${AGENT_PATHS[@]}"; do
+    agent_name=$(basename "$agent_path")
+    global_path="$GLOBAL_AGENTS_DIR/$agent_name"
 
-    if [[ ! -f "$local_path" ]]; then
-        echo -e "${RED}  ✗ $agent - Local file not found${NC}"
-        ((agents_fail++))
-        continue
-    fi
-
-    # Create file-level symbolic link
-    if ln -s "$local_path" "$global_path" 2>/dev/null; then
-        echo -e "${GREEN}  ✓ $agent${NC}"
+    if ln -s "$agent_path" "$global_path" 2>/dev/null; then
+        echo -e "${GREEN}  ✓ $agent_name${NC}"
         ((agents_success++))
     else
-        echo -e "${RED}  ✗ $agent - Failed to create symbolic link${NC}"
+        echo -e "${RED}  ✗ $agent_name - Failed to create symbolic link${NC}"
         ((agents_fail++))
     fi
 done
@@ -205,26 +188,19 @@ done
 commands_success=0
 commands_fail=0
 
-if [[ -n "$LOCAL_COMMANDS_DIR" ]] && [[ ${#COMMANDS[@]} -gt 0 ]]; then
+if [[ ${#COMMAND_PATHS[@]} -gt 0 ]]; then
     echo ""
     echo "Installing commands as file-level symbolic links..."
 
-    for command in "${COMMANDS[@]}"; do
-        local_path="$LOCAL_COMMANDS_DIR/$command"
-        global_path="$GLOBAL_COMMANDS_DIR/$command"
+    for command_path in "${COMMAND_PATHS[@]}"; do
+        command_name=$(basename "$command_path")
+        global_path="$GLOBAL_COMMANDS_DIR/$command_name"
 
-        if [[ ! -f "$local_path" ]]; then
-            echo -e "${RED}  ✗ $command - Local file not found${NC}"
-            ((commands_fail++))
-            continue
-        fi
-
-        # Create file-level symbolic link
-        if ln -s "$local_path" "$global_path" 2>/dev/null; then
-            echo -e "${GREEN}  ✓ $command${NC}"
+        if ln -s "$command_path" "$global_path" 2>/dev/null; then
+            echo -e "${GREEN}  ✓ $command_name${NC}"
             ((commands_success++))
         else
-            echo -e "${RED}  ✗ $command - Failed to create symbolic link${NC}"
+            echo -e "${RED}  ✗ $command_name - Failed to create symbolic link${NC}"
             ((commands_fail++))
         fi
     done
@@ -234,26 +210,21 @@ fi
 skills_success=0
 skills_fail=0
 
-if [[ -n "$LOCAL_SKILLS_DIR" ]] && [[ ${#SKILLS[@]} -gt 0 ]]; then
+if [[ ${#SKILL_PATHS[@]} -gt 0 ]]; then
     echo ""
     echo "Installing skills as folder-level symbolic links..."
 
-    for skill in "${SKILLS[@]}"; do
-        local_path="$LOCAL_SKILLS_DIR/$skill"
-        global_path="$GLOBAL_SKILLS_DIR/$skill"
+    for skill_path in "${SKILL_PATHS[@]}"; do
+        # Remove trailing slash
+        skill_path="${skill_path%/}"
+        skill_name=$(basename "$skill_path")
+        global_path="$GLOBAL_SKILLS_DIR/$skill_name"
 
-        if [[ ! -d "$local_path" ]]; then
-            echo -e "${RED}  ✗ $skill - Local folder not found${NC}"
-            ((skills_fail++))
-            continue
-        fi
-
-        # Create folder-level symbolic link
-        if ln -s "$local_path" "$global_path" 2>/dev/null; then
-            echo -e "${GREEN}  ✓ $skill${NC}"
+        if ln -s "$skill_path" "$global_path" 2>/dev/null; then
+            echo -e "${GREEN}  ✓ $skill_name${NC}"
             ((skills_success++))
         else
-            echo -e "${RED}  ✗ $skill - Failed to create symbolic link${NC}"
+            echo -e "${RED}  ✗ $skill_name - Failed to create symbolic link${NC}"
             ((skills_fail++))
         fi
     done
@@ -267,18 +238,14 @@ if [[ $agents_fail -gt 0 ]]; then
     echo -e "${RED}Failed to install: $agents_fail agents${NC}"
 fi
 
-if [[ -n "$LOCAL_COMMANDS_DIR" ]]; then
-    echo -e "${GREEN}Successfully installed: $commands_success commands${NC}"
-    if [[ $commands_fail -gt 0 ]]; then
-        echo -e "${RED}Failed to install: $commands_fail commands${NC}"
-    fi
+echo -e "${GREEN}Successfully installed: $commands_success commands${NC}"
+if [[ $commands_fail -gt 0 ]]; then
+    echo -e "${RED}Failed to install: $commands_fail commands${NC}"
 fi
 
-if [[ -n "$LOCAL_SKILLS_DIR" ]]; then
-    echo -e "${GREEN}Successfully installed: $skills_success skills${NC}"
-    if [[ $skills_fail -gt 0 ]]; then
-        echo -e "${RED}Failed to install: $skills_fail skills${NC}"
-    fi
+echo -e "${GREEN}Successfully installed: $skills_success skills${NC}"
+if [[ $skills_fail -gt 0 ]]; then
+    echo -e "${RED}Failed to install: $skills_fail skills${NC}"
 fi
 
 total_fail=$((agents_fail + commands_fail + skills_fail))
@@ -287,7 +254,8 @@ if [[ $total_fail -eq 0 ]]; then
     echo "All agents, commands, and skills have been successfully linked!"
     echo ""
     echo "Note: Agents and commands are file-level symlinks, skills are folder-level symlinks."
-    echo "You can manually add other files to ~/.claude/agents/, ~/.claude/commands/, or ~/.claude/skills/ if needed."
+    echo "Changes to local files are immediately reflected after restarting Claude Code."
+    echo ""
     echo "Restart your Claude Code terminal to load the new agents, commands, and skills."
 fi
 

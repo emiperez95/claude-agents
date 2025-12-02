@@ -1,0 +1,11 @@
+{
+  "name": "heimdall-pr-guardian",
+  "version": "1.0.0",
+  "description": "PR status monitor - tracks comments, CI/CD checks, approvals, and merge blockers",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["github", "pr", "pull-request", "status", "ci-cd"]
+}

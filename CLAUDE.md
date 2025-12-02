@@ -28,8 +28,32 @@ ls -la ~/.claude/skills/ | grep -E "athena"
 
 ## Agent Architecture
 
+### Plugin Structure
+Each agent, command, and skill is packaged as a separate plugin for selective installation:
+
+```
+agents/<plugin-name>/
+├── .claude-plugin/
+│   └── plugin.json          # Plugin manifest
+└── agents/
+    └── <agent-name>.md      # Agent definition
+
+commands/<plugin-name>/
+├── .claude-plugin/
+│   └── plugin.json
+└── commands/
+    └── <command-name>.md
+
+skills/<plugin-name>/
+├── .claude-plugin/
+│   └── plugin.json
+└── skills/
+    └── <skill-name>/
+        └── SKILL.md
+```
+
 ### Agent Structure
-Each agent in `agents/` directory follows this format:
+Each agent `.md` file follows this format:
 - **Frontmatter**: YAML configuration with name, description, tools, model
 - **Description field**: Must include "PROACTIVELY USED" for automatic triggering
 - **Prompt**: Defines agent personality and data collection instructions
@@ -232,12 +256,13 @@ rclone cat gdrive:path/to/file
 - No syncing - downloads only specified files
 
 ### Symbolic Link Management
-The installer creates file-level symbolic links in the global directory:
-- Global directory: `~/.claude/agents/` (real directory, not a symlink)
-- Local agents: `./agents/`
-- Each agent is individually symlinked from global to local
-- Changes to local files immediately affect global agents
-- You can manually add other agent files directly to `~/.claude/agents/` if needed
+The installer auto-discovers plugins and creates symbolic links:
+- Discovers agents from `agents/*/agents/*.md`
+- Discovers commands from `commands/*/commands/*.md`
+- Discovers skills from `skills/*/skills/*/SKILL.md`
+- Creates file-level symlinks for agents and commands
+- Creates folder-level symlinks for skills
+- Changes to local files immediately affect global installations after restart
 
 ### Testing Agent Triggers
 After installation, restart Claude Code terminal and test with:

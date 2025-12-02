@@ -1,0 +1,11 @@
+{
+  "name": "atlas-jira-analyst",
+  "version": "1.0.0",
+  "description": "Jira issue analyst - extracts comprehensive context from tickets including acceptance criteria, comments, and epic details",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["jira", "analyst", "tickets", "requirements"]
+}

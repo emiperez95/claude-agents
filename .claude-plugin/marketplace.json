@@ -1,7 +1,16 @@
 {
-  "name": "agent-workflow-marketplace",
-  "description": "Workflow automation agents for Jira, GitHub, Notion, and Google Drive",
+  "name": "claude-agents-marketplace",
+  "description": "Workflow automation agents, commands, and skills for Jira, GitHub, Notion, and Google Drive",
   "plugins": [
-    { "source": "./" }
+    { "source": "./agents/atlas-jira-analyst" },
+    { "source": "./agents/apollo-jira-scribe" },
+    { "source": "./agents/clio-docs-oracle" },
+    { "source": "./agents/heimdall-pr-guardian" },
+    { "source": "./agents/hephaestus-workspace-forge" },
+    { "source": "./agents/hermes-pr-courier" },
+    { "source": "./agents/minerva-notion-oracle" },
+    { "source": "./commands/gemini" },
+    { "source": "./commands/jira-status" },
+    { "source": "./skills/athena-pr-reviewer" }
   ]
 }

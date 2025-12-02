@@ -1,0 +1,11 @@
+{
+  "name": "gemini-command",
+  "version": "1.0.0",
+  "description": "Gemini CLI integration - leverages Gemini's large context window for codebase analysis",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["gemini", "ai", "codebase", "analysis"]
+}

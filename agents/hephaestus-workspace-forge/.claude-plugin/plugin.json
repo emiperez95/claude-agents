@@ -1,0 +1,11 @@
+{
+  "name": "hephaestus-workspace-forge",
+  "version": "1.0.0",
+  "description": "Development environment orchestrator - manages git worktrees and tmux/sesh sessions",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["git", "worktree", "tmux", "sesh", "workspace", "environment"]
+}

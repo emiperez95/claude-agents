@@ -1,0 +1,11 @@
+{
+  "name": "clio-docs-oracle",
+  "version": "1.0.0",
+  "description": "Google Drive document reader - reads Docs, Sheets, PDFs, and other files from Drive links",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["google-drive", "docs", "sheets", "pdf", "documents"]
+}

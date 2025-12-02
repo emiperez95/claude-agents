@@ -1,0 +1,11 @@
+{
+  "name": "athena-pr-reviewer",
+  "version": "1.0.0",
+  "description": "Multi-LLM PR reviewer - orchestrates 8 parallel reviewers with confidence scoring and consensus boosting",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["github", "pr", "pull-request", "review", "multi-llm", "gemini", "codex"]
+}

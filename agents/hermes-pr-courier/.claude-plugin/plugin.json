@@ -1,0 +1,11 @@
+{
+  "name": "hermes-pr-courier",
+  "version": "1.0.0",
+  "description": "PR content collector - gathers metadata, file changes, commit history, and linked issues",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["github", "pr", "pull-request", "changes", "commits"]
+}
