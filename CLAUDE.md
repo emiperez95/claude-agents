@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This repository contains eight specialized Claude Code agents for automating workflows and information gathering from Jira, GitHub, Notion, Google Drive, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus orchestrator agents for comprehensive PR reviews and development workflow automation.
+This repository contains seven specialized Claude Code agents and one skill for automating workflows and information gathering from Jira, GitHub, Notion, Google Drive, and local development environments. Most agents are pure information collectors that return structured data without opinions or analysis, plus the Athena PR Reviewer skill for comprehensive multi-LLM code reviews.
 
 It also includes slash commands for extending Claude Code's capabilities with external tools.
 
@@ -21,8 +21,9 @@ It also includes slash commands for extending Claude Code's capabilities with ex
 ./uninstall-agents.sh
 
 # Verify installation
-ls -la ~/.claude/agents/ | grep -E "(atlas|apollo|heimdall|hermes|athena|minerva|hephaestus|clio)"
+ls -la ~/.claude/agents/ | grep -E "(atlas|apollo|heimdall|hermes|minerva|hephaestus|clio)"
 ls -la ~/.claude/commands/ | grep -E "(gemini|jira-status)"
+ls -la ~/.claude/skills/ | grep -E "athena"
 ```
 
 ## Agent Architecture
@@ -40,26 +41,28 @@ Each agent in `agents/` directory follows this format:
 3. **Comment ID Extraction**: All PR agents must extract comment/review IDs for responding/resolving
 4. **Model Optimization**: Using Sonnet model for cost efficiency (Opus for complex orchestration)
 
-### Orchestration Protocol
-When an agent outputs an `=== ORCHESTRATION REQUIRED ===` block:
-1. **Parse the commands**: Extract the Task tool invocations listed
-2. **Execute in parallel**: Run all Task commands in a single message with multiple tool calls
-3. **Collect results**: Gather outputs from all invoked agents
-4. **Return for synthesis**: Re-invoke the orchestrating agent with `"SYNTHESIS: [combined results]"`
+### Skill Architecture (Athena)
+The Athena PR Reviewer skill uses a different pattern than agents:
+1. **Data gathering**: Runs `gather-context.sh` to collect PR, Jira, guidelines, blame, prior comments
+2. **Parallel reviews**: Launches 8 reviewers simultaneously:
+   - Background bash script runs Gemini + Codex
+   - 6 Task tool calls run Claude specialists in parallel
+3. **Aggregation**: Combines findings, applies confidence filtering and consensus boosting
+4. **Synthesis**: Produces actionable review with prioritized items
 
-Example orchestration flow:
+Example flow:
 ```
 User: "review PR 123"
   ↓
-Claude: Invokes athena-pr-reviewer
+Claude: Invokes athena-pr-reviewer skill
   ↓
-Athena: Outputs "=== ORCHESTRATION REQUIRED ===" with agent commands
+Skill: Runs gather-context.sh (parallel data collection)
   ↓
-Claude: Executes all Task commands in parallel
+Skill: Launches 8 parallel reviews (1 bash + 6 Task calls)
   ↓
-Claude: Re-invokes athena with "SYNTHESIS: [results]"
+Claude: Aggregates findings, applies confidence/consensus rules
   ↓
-Athena: Performs final review synthesis
+Claude: Outputs actionable review summary
 ```
 
 ### Agent Capabilities
@@ -88,11 +91,11 @@ Athena: Performs final review synthesis
 - Categorizes files by type (frontend/backend/tests/docs)
 - Calculates PR size (XS/S/M/L/XL)
 
-**Athena PR Reviewer** (`athena-pr-reviewer.md`)
-- Orchestrates comprehensive PR reviews
-- Uses command-output pattern to coordinate other agents
-- Compares implementation against Jira requirements
-- Provides actionable review recommendations
+**Athena PR Reviewer** (`skills/athena-pr-reviewer/`)
+- Multi-LLM skill that orchestrates 8 parallel reviewers
+- Uses Gemini + Codex for general review, 6 Claude specialists for focused analysis
+- Includes confidence scoring (0-100) and consensus boosting
+- Gathers context: PR diff, Jira requirements, CLAUDE.md guidelines, git blame, prior comments
 
 **Minerva Notion Oracle** (`minerva-notion-oracle.md`)
 - Searches and retrieves content from Notion workspaces
@@ -243,7 +246,7 @@ After installation, restart Claude Code terminal and test with:
 - "Create a ticket for new feature" → should trigger apollo-jira-scribe
 - "Move PROJ-123 to In Progress" → should trigger apollo-jira-scribe
 - "What's in PR #456" → should trigger hermes-pr-courier
-- "Review PR #789" → should trigger athena-pr-reviewer
+- "Review PR #789" → should trigger athena-pr-reviewer skill
 - "Find our API documentation" → should trigger minerva-notion-oracle
 - "Read this Google Doc link" → should trigger clio-docs-oracle
 - "Get content from Drive attachment" → should trigger clio-docs-oracle
@@ -284,7 +287,6 @@ readlink ~/.claude/agents/atlas-jira-analyst.md
 readlink ~/.claude/agents/apollo-jira-scribe.md
 readlink ~/.claude/agents/heimdall-pr-guardian.md
 readlink ~/.claude/agents/hermes-pr-courier.md
-readlink ~/.claude/agents/athena-pr-reviewer.md
 readlink ~/.claude/agents/hephaestus-workspace-forge.md
 readlink ~/.claude/agents/minerva-notion-oracle.md
 readlink ~/.claude/agents/clio-docs-oracle.md
@@ -292,4 +294,7 @@ readlink ~/.claude/agents/clio-docs-oracle.md
 # Verify command symlinks
 readlink ~/.claude/commands/gemini.md
 readlink ~/.claude/commands/jira-status.md
+
+# Verify skill symlinks
+readlink ~/.claude/skills/athena-pr-reviewer
 ```

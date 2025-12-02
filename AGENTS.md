@@ -1,6 +1,6 @@
 # Agent Documentation
 
-Detailed documentation for the five Claude Code development agents.
+Detailed documentation for the seven Claude Code development agents and the Athena PR Reviewer skill.
 
 ## Atlas Jira Analyst
 
@@ -205,75 +205,6 @@ Assistant: [Invokes hermes-pr-courier to gather PR content information]
 
 ---
 
-## Athena PR Reviewer
-
-### Purpose
-Athena brings wisdom to code reviews, orchestrating comprehensive PR analysis by coordinating multiple specialized agents. She compares implementations against requirements and provides actionable review insights.
-
-### Trigger Phrases (Proactive)
-The agent automatically activates when you mention:
-- "Review PR #..."
-- "Review this pull request"
-- "PR review"
-- "Code review"
-- "Check if PR meets requirements"
-
-### Capabilities
-- Orchestrates multiple agents for comprehensive reviews
-- Fetches Jira requirements context
-- Analyzes PR content and changes
-- Monitors PR status and comments
-- Compares implementation against acceptance criteria
-- Provides structured review recommendations
-- Uses Opus model for complex reasoning
-
-### Input Formats
-```bash
-# PR number
-"Review PR #123"
-
-# Full URL
-"Review https://github.com/org/repo/pull/456"
-
-# With Jira context
-"Review PR #789 against PROJ-567"
-```
-
-### Output Format
-```
-# COMPREHENSIVE PR REVIEW: #123
-
-## REQUIREMENTS ALIGNMENT
-✅ Requirement 1: Fully implemented
-⚠️ Requirement 2: Partially implemented
-❌ Requirement 3: Not addressed
-
-## CODE QUALITY ASSESSMENT
-- Architecture: Follows established patterns
-- Testing: 80% coverage achieved
-- Documentation: Needs improvement
-
-## REVIEW RECOMMENDATIONS
-1. Address missing requirement for error handling
-2. Add unit tests for edge cases
-3. Update API documentation
-
-## MERGE READINESS
-Status: NOT READY
-Blockers:
-- 2 failing CI checks
-- 3 unresolved comments
-- Missing requirement implementation
-```
-
-### Example Usage
-```
-User: "Review PR #456"
-Assistant: [Invokes athena-pr-reviewer which orchestrates other agents for comprehensive review]
-```
-
----
-
 ## Minerva Notion Oracle
 
 ### Purpose
@@ -395,4 +326,89 @@ Add tool names to the `tools:` list in the frontmatter. Ensure the tools are ava
 ```
 "Find our deployment process documentation"
 → Triggers minerva-notion-oracle
+```
+
+---
+
+## Athena PR Reviewer (Skill)
+
+### Purpose
+Athena brings wisdom to code reviews through a multi-LLM approach. As a **skill** (not an agent), she orchestrates 8 parallel reviewers to provide comprehensive, confidence-scored feedback.
+
+### Trigger Phrases (Proactive)
+The skill automatically activates when you mention:
+- "Review PR #..."
+- "Review this pull request"
+- "PR review"
+- "Code review"
+- "Review CSD-123" (Jira ticket)
+
+### Architecture
+Athena runs **8 reviewers in parallel**:
+
+**External LLMs (via bash script):**
+- **Gemini**: General code review with large context
+- **Codex**: General code review from OpenAI
+
+**Claude Specialists (via Task tool):**
+1. **Comment Analyzer**: Documentation quality, technical debt markers
+2. **Test Analyzer**: Test coverage gaps, missing edge cases
+3. **Error Hunter**: Silent failures, missing error handling
+4. **Type Reviewer**: Type design quality, type safety
+5. **Code Reviewer**: General quality, bugs, security (uses Opus)
+6. **Simplifier**: Unnecessary complexity, over-engineering
+
+### Confidence Scoring
+Each finding includes a confidence score (0-100):
+- **90-100**: Certain - clear violation, verifiable
+- **70-89**: Likely - probable issue, needs verification
+- **50-69**: Possible - might be intentional
+- **<50**: Not reported (too speculative)
+
+### Consensus Boosting
+Items flagged by 2+ reviewers get priority bumped:
+| Reviewers | Original | Final |
+|-----------|----------|-------|
+| 3+ | High | Critical |
+| 2 | High | Critical |
+| 3+ | Medium | High |
+| 2 | Medium | High |
+
+### Data Gathering
+The skill gathers comprehensive context via `gather-context.sh`:
+- PR metadata and diff
+- Jira ticket and epic context
+- CLAUDE.md guidelines from repo
+- Git blame for changed files
+- Prior PR comments on same files
+
+### Output Format
+```markdown
+# PR Review: {Title} (#{Number})
+
+## Requirements Status
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+
+## Action Items
+
+### Critical (consensus)
+- [ ] file:line - issue - fix [Gemini + Codex + Claude-errors] (3+, avg 92%)
+
+### High Priority
+- [ ] file:line - issue - fix [Gemini + Claude-tests] ← boosted (2, avg 85%)
+
+### Medium Priority
+- [ ] file:line - issue - fix [Claude-simplify] (88%)
+
+### Suggestions
+- improvements
+
+## Recommendation: APPROVE / REQUEST_CHANGES
+```
+
+### Example Usage
+```
+User: "Review PR #456"
+Assistant: [Invokes athena-pr-reviewer skill which runs 8 parallel reviews]
 ```

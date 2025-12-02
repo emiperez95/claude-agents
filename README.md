@@ -12,14 +12,14 @@ Additionally, this repository includes slash commands that extend Claude Code's 
 
 ### Plugin Installation (Recommended)
 ```bash
-/plugin marketplace add emilianoperez/agent-workflow
+/plugin marketplace add emiperez95/claude-agents
 /plugin install agent-workflow
 ```
 
 ### Alternative: Symlink Installation
 ```bash
-git clone https://github.com/emilianoperez/agent-workflow.git
-cd agent-workflow
+git clone https://github.com/emiperez95/claude-agents.git
+cd claude-agents
 ./install-agents.sh
 ```
 
@@ -30,10 +30,7 @@ Restart your Claude Code terminal. The agents will automatically activate when y
 ### 🏛️ Atlas Jira Analyst
 Extracts comprehensive context from Jira issues including acceptance criteria, comments, and epic details.
 
-### ⚖️ Athena PR Reviewer
-Orchestrates comprehensive PR reviews by coordinating Jira requirements, PR content, and status checks to provide actionable review insights.
-
-### 🛡️ Heimdall PR Guardian  
+### 🛡️ Heimdall PR Guardian
 Monitors your pull request status, tracking comments, CI/CD checks, approvals, and merge blockers.
 
 ### 📬 Hermes PR Courier
@@ -53,6 +50,15 @@ Creates Jira tickets, transitions workflow states, and assigns tickets to sprint
 
 For detailed information about each agent, see [AGENTS.md](AGENTS.md).
 
+## Skills
+
+### ⚖️ Athena PR Reviewer
+Multi-LLM PR review skill that orchestrates 8 parallel reviewers:
+- **Gemini** + **Codex**: General code review
+- **6 Claude specialists**: Comments, tests, errors, types, general quality, simplification
+
+Features confidence scoring (0-100), consensus boosting (2+ reviewers = priority bump), and requirement validation against Jira tickets.
+
 ## Slash Commands
 
 ### 🔮 Gemini CLI Integration
@@ -70,7 +76,7 @@ Leverages Gemini's massive context window for large codebase analysis. Use `/gem
 ### Plugin Installation (Recommended)
 Install via Claude Code's plugin system:
 ```bash
-/plugin marketplace add emilianoperez/agent-workflow
+/plugin marketplace add emiperez95/claude-agents
 /plugin install agent-workflow
 ```
 
@@ -125,7 +131,6 @@ The agents are configured to use:
 ├── agents/
 │   ├── atlas-jira-analyst.md
 │   ├── apollo-jira-scribe.md
-│   ├── athena-pr-reviewer.md
 │   ├── heimdall-pr-guardian.md
 │   ├── hermes-pr-courier.md
 │   ├── minerva-notion-oracle.md
