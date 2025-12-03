@@ -26,67 +26,84 @@ echo "==================================="
 echo ""
 
 # Auto-discover agents, commands, and skills from both:
-# 1. Parent repo (private): agents/, commands/, skills/
-# 2. cc-toolkit submodule (public): cc-toolkit/agents/, cc-toolkit/commands/, cc-toolkit/skills/
-#
-# Structure: <location>/agents/<plugin-name>/agents/<agent-name>.md
-#            <location>/commands/<plugin-name>/commands/<command-name>.md
-#            <location>/skills/<plugin-name>/skills/<skill-name>/SKILL.md
+# 1. Private (flat structure): agents/*.md, commands/*.md, skills/*/SKILL.md
+# 2. Public (plugin structure): cc-toolkit/agents/*/agents/*.md, etc.
 
 discover_agents() {
     local agents=()
-    # Scan both parent and cc-toolkit
-    for base_dir in "$SCRIPT_DIR" "$SCRIPT_DIR/cc-toolkit"; do
-        if [[ -d "$base_dir/agents" ]]; then
-            for plugin_dir in "$base_dir"/agents/*/; do
-                if [[ -d "$plugin_dir/agents" ]]; then
-                    for agent_file in "$plugin_dir"/agents/*.md; do
-                        if [[ -f "$agent_file" ]]; then
-                            agents+=("$agent_file")
-                        fi
-                    done
-                fi
-            done
+
+    # Private: flat files in agents/
+    for agent_file in "$SCRIPT_DIR"/agents/*.md; do
+        if [[ -f "$agent_file" ]]; then
+            agents+=("$agent_file")
         fi
     done
+
+    # Public: nested plugin structure in cc-toolkit/
+    if [[ -d "$SCRIPT_DIR/cc-toolkit/agents" ]]; then
+        for plugin_dir in "$SCRIPT_DIR"/cc-toolkit/agents/*/; do
+            if [[ -d "$plugin_dir/agents" ]]; then
+                for agent_file in "$plugin_dir"/agents/*.md; do
+                    if [[ -f "$agent_file" ]]; then
+                        agents+=("$agent_file")
+                    fi
+                done
+            fi
+        done
+    fi
+
     echo "${agents[@]}"
 }
 
 discover_commands() {
     local commands=()
-    # Scan both parent and cc-toolkit
-    for base_dir in "$SCRIPT_DIR" "$SCRIPT_DIR/cc-toolkit"; do
-        if [[ -d "$base_dir/commands" ]]; then
-            for plugin_dir in "$base_dir"/commands/*/; do
-                if [[ -d "$plugin_dir/commands" ]]; then
-                    for command_file in "$plugin_dir"/commands/*.md; do
-                        if [[ -f "$command_file" ]]; then
-                            commands+=("$command_file")
-                        fi
-                    done
-                fi
-            done
+
+    # Private: flat files in commands/
+    for command_file in "$SCRIPT_DIR"/commands/*.md; do
+        if [[ -f "$command_file" ]]; then
+            commands+=("$command_file")
         fi
     done
+
+    # Public: nested plugin structure in cc-toolkit/
+    if [[ -d "$SCRIPT_DIR/cc-toolkit/commands" ]]; then
+        for plugin_dir in "$SCRIPT_DIR"/cc-toolkit/commands/*/; do
+            if [[ -d "$plugin_dir/commands" ]]; then
+                for command_file in "$plugin_dir"/commands/*.md; do
+                    if [[ -f "$command_file" ]]; then
+                        commands+=("$command_file")
+                    fi
+                done
+            fi
+        done
+    fi
+
     echo "${commands[@]}"
 }
 
 discover_skills() {
     local skills=()
-    # Scan both parent and cc-toolkit
-    for base_dir in "$SCRIPT_DIR" "$SCRIPT_DIR/cc-toolkit"; do
-        if [[ -d "$base_dir/skills" ]]; then
-            for plugin_dir in "$base_dir"/skills/*/; do
-                if [[ -d "$plugin_dir/skills" ]]; then
-                    for skill_dir in "$plugin_dir"/skills/*/; do
-                        if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
-                            skills+=("$skill_dir")
-                        fi
-                    done
-                fi
-            done
+
+    # Private: skills/*/SKILL.md (folder with SKILL.md inside)
+    for skill_dir in "$SCRIPT_DIR"/skills/*/; do
+        if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
+            skills+=("$skill_dir")
         fi
     done
+
+    # Public: nested plugin structure in cc-toolkit/
+    if [[ -d "$SCRIPT_DIR/cc-toolkit/skills" ]]; then
+        for plugin_dir in "$SCRIPT_DIR"/cc-toolkit/skills/*/; do
+            if [[ -d "$plugin_dir/skills" ]]; then
+                for skill_dir in "$plugin_dir"/skills/*/; do
+                    if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
+                        skills+=("$skill_dir")
+                    fi
+                done
+            fi
+        done
+    fi
+
     echo "${skills[@]}"
 }
 
@@ -96,8 +113,8 @@ COMMAND_PATHS=($(discover_commands))
 SKILL_PATHS=($(discover_skills))
 
 echo -e "${BLUE}Sources:${NC}"
-echo "  Private: $SCRIPT_DIR/{agents,commands,skills}/"
-echo "  Public:  $SCRIPT_DIR/cc-toolkit/{agents,commands,skills}/"
+echo "  Private: $SCRIPT_DIR/{agents,commands,skills}/ (flat)"
+echo "  Public:  $SCRIPT_DIR/cc-toolkit/ (plugin format)"
 echo ""
 echo "Discovered ${#AGENT_PATHS[@]} agents, ${#COMMAND_PATHS[@]} commands, ${#SKILL_PATHS[@]} skills"
 echo ""

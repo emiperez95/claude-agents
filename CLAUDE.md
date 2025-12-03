@@ -14,15 +14,15 @@ This repository is a **private workspace** for developing and managing Claude Co
 ```
 03-agents/                          # Private workspace (this repo)
 ├── cc-toolkit/                     # Public submodule → github.com/emiperez95/cc-toolkit
-│   ├── agents/                     # Public agents (6)
-│   ├── commands/                   # Public commands (1)
-│   ├── skills/                     # Public skills (2)
+│   ├── agents/*/agents/*.md        # Public agents (nested plugin format)
+│   ├── commands/*/commands/*.md    # Public commands (nested plugin format)
+│   ├── skills/*/skills/*/SKILL.md  # Public skills (nested plugin format)
 │   └── .claude-plugin/marketplace.json
-├── agents/                         # Private agents
-│   └── hephaestus-workspace-forge/
-├── commands/                       # Private commands
-│   └── jira-status/
-├── skills/                         # Private skills (empty)
+├── agents/                         # Private agents (flat files)
+│   └── hephaestus-workspace-forge.md
+├── commands/                       # Private commands (flat files)
+│   └── jira-status.md
+├── skills/                         # Private skills (folders with SKILL.md)
 ├── install-agents.sh               # Installs from both sources
 └── uninstall-agents.sh
 ```
