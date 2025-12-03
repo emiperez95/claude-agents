@@ -39,11 +39,6 @@
       "description": "Command: Leverage Gemini's massive context window for large codebase analysis"
     },
     {
-      "name": "jira-status",
-      "source": "./commands/jira-status",
-      "description": "Command: Get Jira board status with tickets grouped by actionable sections"
-    },
-    {
       "name": "athena-pr-reviewer",
       "source": "./skills/athena-pr-reviewer",
       "description": "Skill: Multi-LLM PR reviewer with 8 parallel reviewers (requires Gemini and Codex CLI)"
