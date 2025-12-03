@@ -4,6 +4,7 @@
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Script directory (where this script is located)
@@ -20,25 +21,30 @@ if [[ "$1" == "--force" ]]; then
     FORCE=true
 fi
 
-# Exclude list - these are for marketplace distribution only, not local dev
-EXCLUDE_SKILLS=("athena-pr-reviewer-lite")
-
 echo "Claude Agents & Commands Installer"
 echo "==================================="
 echo ""
 
-# Auto-discover agents, commands, and skills from the new plugin structure
-# Structure: agents/<plugin-name>/agents/<agent-name>.md
-#            commands/<plugin-name>/commands/<command-name>.md
-#            skills/<plugin-name>/skills/<skill-name>/SKILL.md
+# Auto-discover agents, commands, and skills from both:
+# 1. Parent repo (private): agents/, commands/, skills/
+# 2. cc-toolkit submodule (public): cc-toolkit/agents/, cc-toolkit/commands/, cc-toolkit/skills/
+#
+# Structure: <location>/agents/<plugin-name>/agents/<agent-name>.md
+#            <location>/commands/<plugin-name>/commands/<command-name>.md
+#            <location>/skills/<plugin-name>/skills/<skill-name>/SKILL.md
 
 discover_agents() {
     local agents=()
-    for plugin_dir in "$SCRIPT_DIR"/agents/*/; do
-        if [[ -d "$plugin_dir/agents" ]]; then
-            for agent_file in "$plugin_dir"/agents/*.md; do
-                if [[ -f "$agent_file" ]]; then
-                    agents+=("$agent_file")
+    # Scan both parent and cc-toolkit
+    for base_dir in "$SCRIPT_DIR" "$SCRIPT_DIR/cc-toolkit"; do
+        if [[ -d "$base_dir/agents" ]]; then
+            for plugin_dir in "$base_dir"/agents/*/; do
+                if [[ -d "$plugin_dir/agents" ]]; then
+                    for agent_file in "$plugin_dir"/agents/*.md; do
+                        if [[ -f "$agent_file" ]]; then
+                            agents+=("$agent_file")
+                        fi
+                    done
                 fi
             done
         fi
@@ -48,11 +54,16 @@ discover_agents() {
 
 discover_commands() {
     local commands=()
-    for plugin_dir in "$SCRIPT_DIR"/commands/*/; do
-        if [[ -d "$plugin_dir/commands" ]]; then
-            for command_file in "$plugin_dir"/commands/*.md; do
-                if [[ -f "$command_file" ]]; then
-                    commands+=("$command_file")
+    # Scan both parent and cc-toolkit
+    for base_dir in "$SCRIPT_DIR" "$SCRIPT_DIR/cc-toolkit"; do
+        if [[ -d "$base_dir/commands" ]]; then
+            for plugin_dir in "$base_dir"/commands/*/; do
+                if [[ -d "$plugin_dir/commands" ]]; then
+                    for command_file in "$plugin_dir"/commands/*.md; do
+                        if [[ -f "$command_file" ]]; then
+                            commands+=("$command_file")
+                        fi
+                    done
                 fi
             done
         fi
@@ -60,26 +71,18 @@ discover_commands() {
     echo "${commands[@]}"
 }
 
-is_excluded_skill() {
-    local skill_name="$1"
-    for excluded in "${EXCLUDE_SKILLS[@]}"; do
-        if [[ "$skill_name" == "$excluded" ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
 discover_skills() {
     local skills=()
-    for plugin_dir in "$SCRIPT_DIR"/skills/*/; do
-        if [[ -d "$plugin_dir/skills" ]]; then
-            for skill_dir in "$plugin_dir"/skills/*/; do
-                if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
-                    skill_name=$(basename "${skill_dir%/}")
-                    if ! is_excluded_skill "$skill_name"; then
-                        skills+=("$skill_dir")
-                    fi
+    # Scan both parent and cc-toolkit
+    for base_dir in "$SCRIPT_DIR" "$SCRIPT_DIR/cc-toolkit"; do
+        if [[ -d "$base_dir/skills" ]]; then
+            for plugin_dir in "$base_dir"/skills/*/; do
+                if [[ -d "$plugin_dir/skills" ]]; then
+                    for skill_dir in "$plugin_dir"/skills/*/; do
+                        if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
+                            skills+=("$skill_dir")
+                        fi
+                    done
                 fi
             done
         fi
@@ -92,16 +95,15 @@ AGENT_PATHS=($(discover_agents))
 COMMAND_PATHS=($(discover_commands))
 SKILL_PATHS=($(discover_skills))
 
+echo -e "${BLUE}Sources:${NC}"
+echo "  Private: $SCRIPT_DIR/{agents,commands,skills}/"
+echo "  Public:  $SCRIPT_DIR/cc-toolkit/{agents,commands,skills}/"
+echo ""
 echo "Discovered ${#AGENT_PATHS[@]} agents, ${#COMMAND_PATHS[@]} commands, ${#SKILL_PATHS[@]} skills"
 echo ""
 
 # Create global directories if they don't exist
 mkdir -p "$GLOBAL_AGENTS_DIR" "$GLOBAL_COMMANDS_DIR" "$GLOBAL_SKILLS_DIR"
-
-# Extract basenames for checking existing files
-get_basename() {
-    basename "$1"
-}
 
 # Check for existing files
 existing_agents=()
@@ -190,9 +192,15 @@ agents_fail=0
 for agent_path in "${AGENT_PATHS[@]}"; do
     agent_name=$(basename "$agent_path")
     global_path="$GLOBAL_AGENTS_DIR/$agent_name"
+    # Indicate source (private or public)
+    if [[ "$agent_path" == *"/cc-toolkit/"* ]]; then
+        source_label="public"
+    else
+        source_label="private"
+    fi
 
     if ln -s "$agent_path" "$global_path" 2>/dev/null; then
-        echo -e "${GREEN}  ✓ $agent_name${NC}"
+        echo -e "${GREEN}  ✓ $agent_name${NC} ($source_label)"
         ((agents_success++))
     else
         echo -e "${RED}  ✗ $agent_name - Failed to create symbolic link${NC}"
@@ -211,9 +219,15 @@ if [[ ${#COMMAND_PATHS[@]} -gt 0 ]]; then
     for command_path in "${COMMAND_PATHS[@]}"; do
         command_name=$(basename "$command_path")
         global_path="$GLOBAL_COMMANDS_DIR/$command_name"
+        # Indicate source (private or public)
+        if [[ "$command_path" == *"/cc-toolkit/"* ]]; then
+            source_label="public"
+        else
+            source_label="private"
+        fi
 
         if ln -s "$command_path" "$global_path" 2>/dev/null; then
-            echo -e "${GREEN}  ✓ $command_name${NC}"
+            echo -e "${GREEN}  ✓ $command_name${NC} ($source_label)"
             ((commands_success++))
         else
             echo -e "${RED}  ✗ $command_name - Failed to create symbolic link${NC}"
@@ -235,9 +249,15 @@ if [[ ${#SKILL_PATHS[@]} -gt 0 ]]; then
         skill_path="${skill_path%/}"
         skill_name=$(basename "$skill_path")
         global_path="$GLOBAL_SKILLS_DIR/$skill_name"
+        # Indicate source (private or public)
+        if [[ "$skill_path" == *"/cc-toolkit/"* ]]; then
+            source_label="public"
+        else
+            source_label="private"
+        fi
 
         if ln -s "$skill_path" "$global_path" 2>/dev/null; then
-            echo -e "${GREEN}  ✓ $skill_name${NC}"
+            echo -e "${GREEN}  ✓ $skill_name${NC} ($source_label)"
             ((skills_success++))
         else
             echo -e "${RED}  ✗ $skill_name - Failed to create symbolic link${NC}"
