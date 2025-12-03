@@ -1,6 +1,6 @@
 ---
 description: Get full Jira board status with tickets grouped by column
-argument-hint: "[PROJECT] (optional, defaults to CSD)"
+argument-hint: "<PROJECT>"
 ---
 
 # Jira Board Status
@@ -17,7 +17,12 @@ Run this bash command to fetch board status:
 
 ```bash
 #!/bin/bash
-PROJECT="${1:-CSD}"
+PROJECT="${1:-}"
+if [[ -z "$PROJECT" ]]; then
+  echo "Usage: /jira-status PROJECT"
+  echo "Example: /jira-status CSD"
+  exit 1
+fi
 
 # Get current user's display name
 CURRENT_USER=$(acli jira workitem search --jql "project = $PROJECT AND assignee = currentUser()" --json --limit 1 2>/dev/null | jq -r '.[0].fields.assignee.displayName // empty')
@@ -80,14 +85,9 @@ end
 
 ## Usage Examples
 
-**Default project (CSD):**
-```
-/jira-status
-```
-
-**Specific project:**
 ```
 /jira-status PROJ
+/jira-status CSD
 ```
 
 ## What This Returns
@@ -107,13 +107,13 @@ Example output format:
 ## In Progress (My Work) (2)
 | # | Key | Summary | Sesh |
 |---|-----|---------|------|
-| A | CSD-123 | Feature X | ✓ |
-| B | CSD-456 | Bug fix Y | - |
+| A | PROJ-123 | Feature X | ✓ |
+| B | PROJ-456 | Bug fix Y | - |
 
 ## Ready For Review (To Review) (1)
 | # | Key | Summary | Assignee | Sesh |
 |---|-----|---------|----------|------|
-| C | CSD-789 | Feature Z | Juan | ✓ |
+| C | PROJ-789 | Feature Z | Juan | ✓ |
 ```
 
 ## Session Switching
@@ -133,7 +133,7 @@ if [ -n "$SESSION" ]; then
 fi
 ```
 
-Replace `TICKET-ID` with the actual ticket key (e.g., CSD-2403).
+Replace `TICKET-ID` with the actual ticket key (e.g., PROJ-123).
 
 ### If the ticket has no session (-)
 

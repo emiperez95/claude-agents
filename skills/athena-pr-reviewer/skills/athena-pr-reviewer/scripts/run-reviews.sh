@@ -23,7 +23,7 @@ echo "---"
 # Run Gemini and Codex in parallel
 {
     # Gemini Review
-    ASDF_NODEJS_VERSION=22.20.0 gemini -p "You are a senior code reviewer. Review this PR against the requirements.
+    gemini -p "You are a senior code reviewer. Review this PR against the requirements.
 
 @${WORK_DIR}/context.md
 @${WORK_DIR}/diff.patch
