@@ -110,6 +110,6 @@ Invoke this skill when:
 
 ## Requirements
 
-- Gemini CLI must be installed (`npm install -g @google/generative-ai-cli` or similar)
-- API key must be configured
+- Gemini CLI must be installed: `npm install -g @google/gemini-cli`
+- Authenticate with Google account (runs automatically on first use)
 - Verify installation: `gemini --version`
