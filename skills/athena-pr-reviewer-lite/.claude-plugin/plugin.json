@@ -1,0 +1,11 @@
+{
+  "name": "athena-pr-reviewer-lite",
+  "version": "1.0.0",
+  "description": "PR reviewer using 6 Claude specialists - no external LLM dependencies (Gemini/Codex not required)",
+  "author": {
+    "name": "Emiliano Perez"
+  },
+  "repository": "https://github.com/emiperez95/claude-agents",
+  "license": "MIT",
+  "keywords": ["pr", "review", "code-review", "claude", "lite"]
+}
