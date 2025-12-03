@@ -21,6 +21,19 @@ if [[ "$1" == "--force" ]]; then
     FORCE=true
 fi
 
+# Skills to exclude from local installation (marketplace-only)
+EXCLUDE_SKILLS=("athena-pr-reviewer-lite")
+
+is_excluded_skill() {
+    local skill_name="$1"
+    for excluded in "${EXCLUDE_SKILLS[@]}"; do
+        if [[ "$skill_name" == "$excluded" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 echo "Claude Agents & Commands Installer"
 echo "==================================="
 echo ""
@@ -87,7 +100,10 @@ discover_skills() {
     # Private: skills/*/SKILL.md (folder with SKILL.md inside)
     for skill_dir in "$SCRIPT_DIR"/skills/*/; do
         if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
-            skills+=("$skill_dir")
+            skill_name=$(basename "${skill_dir%/}")
+            if ! is_excluded_skill "$skill_name"; then
+                skills+=("$skill_dir")
+            fi
         fi
     done
 
@@ -97,7 +113,10 @@ discover_skills() {
             if [[ -d "$plugin_dir/skills" ]]; then
                 for skill_dir in "$plugin_dir"/skills/*/; do
                     if [[ -d "$skill_dir" ]] && [[ -f "$skill_dir/SKILL.md" ]]; then
-                        skills+=("$skill_dir")
+                        skill_name=$(basename "${skill_dir%/}")
+                        if ! is_excluded_skill "$skill_name"; then
+                            skills+=("$skill_dir")
+                        fi
                     fi
                 done
             fi
