@@ -1,16 +1,17 @@
 {
   "name": "claude-agents-marketplace",
+  "owner": "emiperez95",
   "description": "Workflow automation agents, commands, and skills for Jira, GitHub, Notion, and Google Drive",
   "plugins": [
-    { "source": "./agents/atlas-jira-analyst" },
-    { "source": "./agents/apollo-jira-scribe" },
-    { "source": "./agents/clio-docs-oracle" },
-    { "source": "./agents/heimdall-pr-guardian" },
-    { "source": "./agents/hermes-pr-courier" },
-    { "source": "./agents/minerva-notion-oracle" },
-    { "source": "./commands/gemini" },
-    { "source": "./commands/jira-status" },
-    { "source": "./skills/athena-pr-reviewer" },
-    { "source": "./skills/athena-pr-reviewer-lite" }
+    { "name": "atlas-jira-analyst", "source": "./agents/atlas-jira-analyst" },
+    { "name": "apollo-jira-scribe", "source": "./agents/apollo-jira-scribe" },
+    { "name": "clio-docs-oracle", "source": "./agents/clio-docs-oracle" },
+    { "name": "heimdall-pr-guardian", "source": "./agents/heimdall-pr-guardian" },
+    { "name": "hermes-pr-courier", "source": "./agents/hermes-pr-courier" },
+    { "name": "minerva-notion-oracle", "source": "./agents/minerva-notion-oracle" },
+    { "name": "gemini", "source": "./commands/gemini" },
+    { "name": "jira-status", "source": "./commands/jira-status" },
+    { "name": "athena-pr-reviewer", "source": "./skills/athena-pr-reviewer" },
+    { "name": "athena-pr-reviewer-lite", "source": "./skills/athena-pr-reviewer-lite" }
   ]
 }
