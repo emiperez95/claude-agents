@@ -1,6 +1,6 @@
 {
   "name": "claude-agents-marketplace",
-  "owner": "emiperez95",
+  "owner": { "name": "Emiliano Perez", "email": "emiliano@wyeworks.com" },
   "description": "Workflow automation agents, commands, and skills for Jira, GitHub, Notion, and Google Drive",
   "plugins": [
     { "name": "atlas-jira-analyst", "source": "./agents/atlas-jira-analyst" },
