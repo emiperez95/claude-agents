@@ -152,6 +152,11 @@ Each plugin follows this format:
 
 **Athena PR Reviewer Lite** - 6 Claude specialists only, no external dependencies
 
+**Key Features:**
+- Annotated diff with explicit line numbers for accurate references
+- Verification step to filter hallucinated findings
+- Rejected findings saved to `rejected.md` for manual review
+
 > **Sync Guidance**: When modifying athena-pr-reviewer, reflect applicable changes to athena-pr-reviewer-lite. The lite version excludes Gemini and Codex reviewers but shares the same Claude reviewer prompts and orchestration logic.
 
 ## CLI Reference
