@@ -42,11 +42,11 @@ cs-wt help                       # Show help
 
 **Type Flags (Optional):**
 Type flags affect **only** tmux and sesh session naming, not database or branch names:
-- `--review` - Mark as PR review (session: `🌳 review-{branch}`)
-- `--hotfix` - Mark as urgent hotfix (session: `🌳 hotfix-{branch}`)
-- `--experiment` - Mark as experimental work (session: `🌳 experiment-{branch}`)
-- `--spike` - Mark as spike/exploration (session: `🌳 spike-{branch}`)
-- No flag - Default behavior (session: `🌳 worktree-{branch}`)
+- `--review` - Mark as PR review (session: `🌳 review-{branch}-{port}`)
+- `--hotfix` - Mark as urgent hotfix (session: `🌳 hotfix-{branch}-{port}`)
+- `--experiment` - Mark as experimental work (session: `🌳 experiment-{branch}-{port}`)
+- `--spike` - Mark as spike/exploration (session: `🌳 spike-{branch}-{port}`)
+- No flag - Default behavior (session: `🌳 worktree-{branch}-{port}`)
 
 **Features (Clear Session specific):**
 - Creates isolated git worktree in `~/Projects/01-wyeworks/01-clear-session/02-features/<branch>`
@@ -54,6 +54,11 @@ Type flags affect **only** tmux and sesh session naming, not database or branch 
 - Creates dedicated tmux session with split panes
 - Integrates with sesh for session management
 - Complete cleanup on deletion (database, sessions, environment configs)
+
+**Branch naming convention:**
+- ALWAYS include a descriptive suffix: `CSD-XXXX-short-description`
+- The description should be human-readable and indicate the purpose
+- Examples: `CSD-2345-auth-flow`, `CSD-2346-fix-login-redirect`, `CSD-2347-add-user-settings`
 
 **Example workflows:**
 ```bash
@@ -63,26 +68,26 @@ cs-wt new CSD-2345-auth-flow
 # Create from different base branch
 cs-wt new CSD-2345-auth-flow develop
 
-# Use existing remote branch
-cs-wt new CSD-2345 --existing
+# Use existing remote branch (use full branch name as it exists)
+cs-wt new CSD-2345-auth-flow --existing
 
 # Mark as PR review
-cs-wt new CSD-2345 --existing --review
+cs-wt new CSD-2345-auth-flow --existing --review
 
 # Create hotfix from staging
-cs-wt new CSD-2345-critical staging --hotfix
+cs-wt new CSD-2346-fix-login-redirect staging --hotfix
 
 # Experimental work with existing branch
-cs-wt new spike-new-ui --existing --experiment
+cs-wt new CSD-2347-test-new-ui --existing --experiment
 
 # Spike for exploration
-cs-wt new spike-graphql-migration --spike
+cs-wt new CSD-2348-spike-graphql-migration --spike
 
 # Clean deletion
 cs-wt delete CSD-2345-auth-flow
 
 # Force deletion without confirmation
-cs-wt delete CSD-2345 --force
+cs-wt delete CSD-2345-auth-flow --force
 ```
 
 ### 2. sesh-cmd (Session Manager)
@@ -180,28 +185,30 @@ When users want to:
 User: "Create a worktree for CSD-2345"
 You:
 1. Recognize: CSD prefix = Clear Session, safe to use cs-wt
-2. Ask: "Should I create the branch from staging (default) or another base?"
-3. Run: cs-wt new CSD-2345-feature-name staging
-4. Report: "✓ Worktree created at ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-feature-name
+2. Ask: "What's this ticket about? I need a short description for the branch name (e.g., CSD-2345-auth-flow)"
+3. User provides: "It's for the new auth flow"
+4. Ask: "Should I create from staging (default) or another base?"
+5. Run: cs-wt new CSD-2345-auth-flow staging
+6. Report: "✓ Worktree created at ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-auth-flow
    • Database cloned and configured
-   • Tmux session: 🌳 worktree-CSD-2345-feature-name
+   • Tmux session: 🌳 worktree-CSD-2345-auth-flow-3005
 
    To start working: cd to the directory or attach to the tmux session"
 
-User: "Set up a worktree to review CSD-2345"
+User: "Set up a worktree to review CSD-2345-auth-flow"
 You:
-1. Recognize: CSD prefix = Clear Session + "review" context
-2. Run: cs-wt new CSD-2345 --existing --review
+1. Recognize: CSD prefix = Clear Session + "review" context + full branch name provided
+2. Run: cs-wt new CSD-2345-auth-flow --existing --review
 3. Report: "✓ Review worktree created
-   • Session name: 🌳 review-CSD-2345 (marked as PR review)
+   • Session name: 🌳 review-CSD-2345-auth-flow-3007 (marked as PR review)
    • You can easily identify review sessions in tmux/sesh listings"
 
-User: "Create a hotfix worktree for CSD-2346"
+User: "Create a hotfix worktree for CSD-2346 - login redirect bug"
 You:
-1. Recognize: "hotfix" context
-2. Run: cs-wt new CSD-2346-fix-critical staging --hotfix
+1. Recognize: "hotfix" context + description provided
+2. Run: cs-wt new CSD-2346-fix-login-redirect staging --hotfix
 3. Report: "✓ Hotfix worktree created
-   • Session name: 🌳 hotfix-CSD-2346-fix-critical (marked as hotfix)
+   • Session name: 🌳 hotfix-CSD-2346-fix-login-redirect-3009 (marked as hotfix)
    • Database and environment isolated for urgent fix"
 ```
 
@@ -241,7 +248,7 @@ You:
 3. Report: "✓ Session 'API Project' created
    • Path: /current/directory
    • Startup: docker-compose up
-   • Emoji: 🚀"
+   • Emoji: 🖥️"
 ```
 
 ### 3. Cleanup Operations (Priority: MEDIUM)
@@ -259,12 +266,12 @@ When users want to:
 
 **Example interaction:**
 ```
-User: "Remove the CSD-2345 worktree"
+User: "Remove the CSD-2345-auth-flow worktree"
 You:
 1. Recognize: CSD prefix = Clear Session worktree
 2. Run: cs-wt list (to verify it exists)
 3. Ask: "This will delete the worktree, database, and session. Proceed? (--force to skip)"
-4. Run: cs-wt delete CSD-2345-feature-name
+4. Run: cs-wt delete CSD-2345-auth-flow
 5. Report: "✓ Worktree deleted
    • Worktree removed
    • Database dropped
@@ -299,7 +306,7 @@ Details:
 • Worktree path: ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-auth-flow
 • Branch: CSD-2345-auth-flow (created from staging)
 • Database: clearsession_csd_2345_auth_flow (cloned from staging)
-• Tmux/Sesh session: 🌳 worktree-CSD-2345-auth-flow
+• Tmux/Sesh session: 🌳 worktree-CSD-2345-auth-flow-3005
 
 Next steps:
 1. cd ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-auth-flow
@@ -313,21 +320,21 @@ Next steps:
 ```
 === OPERATION SUMMARY ===
 
-Command executed: cs-wt new CSD-2345 --existing --review
+Command executed: cs-wt new CSD-2345-auth-flow --existing --review
 
 Result: SUCCESS
 
 Details:
-• Worktree path: ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345
-• Branch: CSD-2345 (existing branch)
-• Database: clearsession_csd_2345 (cloned from staging)
-• Tmux/Sesh session: 🌳 review-CSD-2345 (marked as PR review)
+• Worktree path: ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-auth-flow
+• Branch: CSD-2345-auth-flow (existing branch)
+• Database: clearsession_csd_2345_auth_flow (cloned from staging)
+• Tmux/Sesh session: 🌳 review-CSD-2345-auth-flow-3007 (marked as PR review)
 • Type: review (easily identifiable in session listings)
 
 Next steps:
-1. cd ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345
-2. Access via: tmux attach -t review-CSD-2345
-3. Or use: sesh connect and select "🌳 review-CSD-2345"
+1. cd ~/Projects/01-wyeworks/01-clear-session/02-features/CSD-2345-auth-flow
+2. Access via: tmux attach -t "🌳 review-CSD-2345-auth-flow-3007"
+3. Or use: sesh connect and select "🌳 review-CSD-2345-auth-flow-3007"
 
 === END SUMMARY ===
 ```
