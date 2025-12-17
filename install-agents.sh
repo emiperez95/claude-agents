@@ -14,6 +14,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 GLOBAL_AGENTS_DIR="$HOME/.claude/agents"
 GLOBAL_COMMANDS_DIR="$HOME/.claude/commands"
 GLOBAL_SKILLS_DIR="$HOME/.claude/skills"
+GLOBAL_HOOKS_DIR="$HOME/.claude/hooks"
 
 # Check for --force flag
 FORCE=false
@@ -126,20 +127,60 @@ discover_skills() {
     echo "${skills[@]}"
 }
 
+discover_hooks() {
+    local hooks=()
+
+    # Private: hooks/ directory at root
+    if [[ -d "$SCRIPT_DIR/hooks" ]]; then
+        for hook_file in "$SCRIPT_DIR"/hooks/*.sh; do
+            if [[ -f "$hook_file" ]]; then
+                hooks+=("$hook_file")
+            fi
+        done
+    fi
+
+    # Public: hooks in plugin directories (cc-toolkit/*/hooks/ or cc-toolkit/skills/*/hooks/)
+    if [[ -d "$SCRIPT_DIR/cc-toolkit" ]]; then
+        # Check for hooks in skill plugins
+        for plugin_dir in "$SCRIPT_DIR"/cc-toolkit/skills/*/; do
+            if [[ -d "$plugin_dir/hooks" ]]; then
+                for hook_file in "$plugin_dir"/hooks/*.sh; do
+                    if [[ -f "$hook_file" ]]; then
+                        hooks+=("$hook_file")
+                    fi
+                done
+            fi
+        done
+        # Check for hooks in agent plugins
+        for plugin_dir in "$SCRIPT_DIR"/cc-toolkit/agents/*/; do
+            if [[ -d "$plugin_dir/hooks" ]]; then
+                for hook_file in "$plugin_dir"/hooks/*.sh; do
+                    if [[ -f "$hook_file" ]]; then
+                        hooks+=("$hook_file")
+                    fi
+                done
+            fi
+        done
+    fi
+
+    echo "${hooks[@]}"
+}
+
 # Discover all plugins
 AGENT_PATHS=($(discover_agents))
 COMMAND_PATHS=($(discover_commands))
 SKILL_PATHS=($(discover_skills))
+HOOK_PATHS=($(discover_hooks))
 
 echo -e "${BLUE}Sources:${NC}"
-echo "  Private: $SCRIPT_DIR/{agents,commands,skills}/ (flat)"
+echo "  Private: $SCRIPT_DIR/{agents,commands,skills,hooks}/ (flat)"
 echo "  Public:  $SCRIPT_DIR/cc-toolkit/ (plugin format)"
 echo ""
-echo "Discovered ${#AGENT_PATHS[@]} agents, ${#COMMAND_PATHS[@]} commands, ${#SKILL_PATHS[@]} skills"
+echo "Discovered ${#AGENT_PATHS[@]} agents, ${#COMMAND_PATHS[@]} commands, ${#SKILL_PATHS[@]} skills, ${#HOOK_PATHS[@]} hooks"
 echo ""
 
 # Create global directories if they don't exist
-mkdir -p "$GLOBAL_AGENTS_DIR" "$GLOBAL_COMMANDS_DIR" "$GLOBAL_SKILLS_DIR"
+mkdir -p "$GLOBAL_AGENTS_DIR" "$GLOBAL_COMMANDS_DIR" "$GLOBAL_SKILLS_DIR" "$GLOBAL_HOOKS_DIR"
 
 # Check for existing files
 existing_agents=()
@@ -164,6 +205,14 @@ for skill_path in "${SKILL_PATHS[@]}"; do
     skill_name=$(basename "${skill_path%/}")
     if [[ -e "$GLOBAL_SKILLS_DIR/$skill_name" ]]; then
         existing_skills+=("$skill_name")
+    fi
+done
+
+existing_hooks=()
+for hook_path in "${HOOK_PATHS[@]}"; do
+    hook_name=$(basename "$hook_path")
+    if [[ -e "$GLOBAL_HOOKS_DIR/$hook_name" ]]; then
+        existing_hooks+=("$hook_name")
     fi
 done
 
@@ -196,6 +245,15 @@ if [[ ${#existing_skills[@]} -gt 0 ]]; then
     has_existing=true
 fi
 
+if [[ ${#existing_hooks[@]} -gt 0 ]]; then
+    echo -e "${YELLOW}Found existing hooks in global directory:${NC}"
+    for hook in "${existing_hooks[@]}"; do
+        echo "  - $hook"
+    done
+    echo ""
+    has_existing=true
+fi
+
 if [[ "$has_existing" == true ]]; then
     if [[ "$FORCE" == false ]]; then
         echo -e "${RED}Error: Files already exist in global directories.${NC}"
@@ -215,6 +273,10 @@ if [[ "$has_existing" == true ]]; then
         for skill in "${existing_skills[@]}"; do
             rm -rf "$GLOBAL_SKILLS_DIR/$skill"
             echo "  Removed skill: $skill"
+        done
+        for hook in "${existing_hooks[@]}"; do
+            rm -f "$GLOBAL_HOOKS_DIR/$hook"
+            echo "  Removed hook: $hook"
         done
         echo ""
     fi
@@ -302,6 +364,69 @@ if [[ ${#SKILL_PATHS[@]} -gt 0 ]]; then
     done
 fi
 
+# Install hooks as file-level symbolic links AND register in settings.json
+hooks_success=0
+hooks_fail=0
+
+if [[ ${#HOOK_PATHS[@]} -gt 0 ]]; then
+    echo ""
+    echo "Installing hooks as file-level symbolic links..."
+
+    for hook_path in "${HOOK_PATHS[@]}"; do
+        hook_name=$(basename "$hook_path")
+        global_path="$GLOBAL_HOOKS_DIR/$hook_name"
+        # Indicate source (private or public)
+        if [[ "$hook_path" == *"/cc-toolkit/"* ]]; then
+            source_label="public"
+        else
+            source_label="private"
+        fi
+
+        if ln -s "$hook_path" "$global_path" 2>/dev/null; then
+            echo -e "${GREEN}  ✓ $hook_name${NC} ($source_label)"
+            ((hooks_success++))
+        else
+            echo -e "${RED}  ✗ $hook_name - Failed to create symbolic link${NC}"
+            ((hooks_fail++))
+        fi
+    done
+
+    # Register hooks in settings.json for local dev
+    # (Plugin marketplace installs use hooks/hooks.json automatically)
+    echo ""
+    echo "Registering hooks in settings.json..."
+    SETTINGS_FILE="$HOME/.claude/settings.json"
+
+    for hook_path in "${HOOK_PATHS[@]}"; do
+        hook_name=$(basename "$hook_path")
+        global_hook_path="$GLOBAL_HOOKS_DIR/$hook_name"
+
+        # Check if this hook is already registered
+        if grep -q "$hook_name" "$SETTINGS_FILE" 2>/dev/null; then
+            echo -e "${YELLOW}  ⊘ $hook_name already registered${NC}"
+        else
+            # Add PermissionRequest hook entry using jq
+            if command -v jq &>/dev/null; then
+                # Create the hook entry
+                tmp_file=$(mktemp)
+                jq --arg cmd "$global_hook_path" '
+                  .hooks.PermissionRequest //= [] |
+                  .hooks.PermissionRequest += [{
+                    "hooks": [{
+                      "type": "command",
+                      "command": $cmd
+                    }]
+                  }]
+                ' "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}  ✓ $hook_name registered in settings.json${NC}"
+            else
+                echo -e "${YELLOW}  ⚠ jq not installed - manually add hook to settings.json:${NC}"
+                echo "    PermissionRequest: $global_hook_path"
+            fi
+        fi
+    done
+fi
+
 echo ""
 echo "Installation Summary"
 echo "==================="
@@ -320,15 +445,20 @@ if [[ $skills_fail -gt 0 ]]; then
     echo -e "${RED}Failed to install: $skills_fail skills${NC}"
 fi
 
-total_fail=$((agents_fail + commands_fail + skills_fail))
+echo -e "${GREEN}Successfully installed: $hooks_success hooks${NC}"
+if [[ $hooks_fail -gt 0 ]]; then
+    echo -e "${RED}Failed to install: $hooks_fail hooks${NC}"
+fi
+
+total_fail=$((agents_fail + commands_fail + skills_fail + hooks_fail))
 if [[ $total_fail -eq 0 ]]; then
     echo ""
-    echo "All agents, commands, and skills have been successfully linked!"
+    echo "All agents, commands, skills, and hooks have been successfully linked!"
     echo ""
-    echo "Note: Agents and commands are file-level symlinks, skills are folder-level symlinks."
+    echo "Note: Agents, commands, and hooks are file-level symlinks, skills are folder-level symlinks."
     echo "Changes to local files are immediately reflected after restarting Claude Code."
     echo ""
-    echo "Restart your Claude Code terminal to load the new agents, commands, and skills."
+    echo "Restart your Claude Code terminal to load the new agents, commands, skills, and hooks."
 fi
 
 if [[ $total_fail -gt 0 ]]; then

@@ -13,6 +13,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 GLOBAL_AGENTS_DIR="$HOME/.claude/agents"
 GLOBAL_COMMANDS_DIR="$HOME/.claude/commands"
 GLOBAL_SKILLS_DIR="$HOME/.claude/skills"
+GLOBAL_HOOKS_DIR="$HOME/.claude/hooks"
 
 echo "Claude Agents & Commands Uninstaller"
 echo "====================================="
@@ -63,18 +64,54 @@ discover_skills() {
     echo "${skills[@]}"
 }
 
+discover_hooks() {
+    local hooks=()
+    # Private: hooks/ directory at root
+    if [[ -d "$SCRIPT_DIR/hooks" ]]; then
+        for hook_file in "$SCRIPT_DIR"/hooks/*.sh; do
+            if [[ -f "$hook_file" ]]; then
+                hooks+=("$(basename "$hook_file")")
+            fi
+        done
+    fi
+    # Public: hooks in cc-toolkit plugins
+    if [[ -d "$SCRIPT_DIR/cc-toolkit" ]]; then
+        for plugin_dir in "$SCRIPT_DIR"/cc-toolkit/skills/*/; do
+            if [[ -d "$plugin_dir/hooks" ]]; then
+                for hook_file in "$plugin_dir"/hooks/*.sh; do
+                    if [[ -f "$hook_file" ]]; then
+                        hooks+=("$(basename "$hook_file")")
+                    fi
+                done
+            fi
+        done
+        for plugin_dir in "$SCRIPT_DIR"/cc-toolkit/agents/*/; do
+            if [[ -d "$plugin_dir/hooks" ]]; then
+                for hook_file in "$plugin_dir"/hooks/*.sh; do
+                    if [[ -f "$hook_file" ]]; then
+                        hooks+=("$(basename "$hook_file")")
+                    fi
+                done
+            fi
+        done
+    fi
+    echo "${hooks[@]}"
+}
+
 # Discover all plugins
 AGENTS=($(discover_agents))
 COMMANDS=($(discover_commands))
 SKILLS=($(discover_skills))
+HOOKS=($(discover_hooks))
 
-echo "Found ${#AGENTS[@]} agents, ${#COMMANDS[@]} commands, ${#SKILLS[@]} skills to check"
+echo "Found ${#AGENTS[@]} agents, ${#COMMANDS[@]} commands, ${#SKILLS[@]} skills, ${#HOOKS[@]} hooks to check"
 echo ""
 
 # Check if global directories exist
 agents_dir_exists=false
 commands_dir_exists=false
 skills_dir_exists=false
+hooks_dir_exists=false
 
 if [[ -d "$GLOBAL_AGENTS_DIR" ]]; then
     agents_dir_exists=true
@@ -88,7 +125,11 @@ if [[ -d "$GLOBAL_SKILLS_DIR" ]]; then
     skills_dir_exists=true
 fi
 
-if [[ "$agents_dir_exists" == false ]] && [[ "$commands_dir_exists" == false ]] && [[ "$skills_dir_exists" == false ]]; then
+if [[ -d "$GLOBAL_HOOKS_DIR" ]]; then
+    hooks_dir_exists=true
+fi
+
+if [[ "$agents_dir_exists" == false ]] && [[ "$commands_dir_exists" == false ]] && [[ "$skills_dir_exists" == false ]] && [[ "$hooks_dir_exists" == false ]]; then
     echo -e "${RED}Error: No global directories found.${NC}"
     echo "Nothing to uninstall."
     exit 1
@@ -124,9 +165,19 @@ if [[ "$skills_dir_exists" == true ]]; then
     done
 fi
 
+# Check which hooks exist
+existing_hooks=()
+if [[ "$hooks_dir_exists" == true ]]; then
+    for hook in "${HOOKS[@]}"; do
+        if [[ -e "$GLOBAL_HOOKS_DIR/$hook" ]]; then
+            existing_hooks+=("$hook")
+        fi
+    done
+fi
+
 # Handle no files found
-if [[ ${#existing_agents[@]} -eq 0 ]] && [[ ${#existing_commands[@]} -eq 0 ]] && [[ ${#existing_skills[@]} -eq 0 ]]; then
-    echo -e "${YELLOW}No agents, commands, or skills found to uninstall.${NC}"
+if [[ ${#existing_agents[@]} -eq 0 ]] && [[ ${#existing_commands[@]} -eq 0 ]] && [[ ${#existing_skills[@]} -eq 0 ]] && [[ ${#existing_hooks[@]} -eq 0 ]]; then
+    echo -e "${YELLOW}No agents, commands, skills, or hooks found to uninstall.${NC}"
     exit 0
 fi
 
@@ -189,6 +240,41 @@ if [[ ${#existing_skills[@]} -gt 0 ]]; then
     done
 fi
 
+# Uninstall hooks (symlinks AND settings.json entries)
+hooks_success=0
+hooks_fail=0
+
+if [[ ${#existing_hooks[@]} -gt 0 ]]; then
+    echo ""
+    echo "Uninstalling hooks..."
+    SETTINGS_FILE="$HOME/.claude/settings.json"
+
+    for hook in "${existing_hooks[@]}"; do
+        global_path="$GLOBAL_HOOKS_DIR/$hook"
+
+        # Remove symlink
+        if rm -f "$global_path" 2>/dev/null; then
+            echo -e "${GREEN}  ✓ Removed symlink: $hook${NC}"
+            ((hooks_success++))
+        else
+            echo -e "${RED}  ✗ Failed to remove symlink: $hook${NC}"
+            ((hooks_fail++))
+        fi
+
+        # Remove from settings.json
+        if command -v jq &>/dev/null && [[ -f "$SETTINGS_FILE" ]]; then
+            if grep -q "$hook" "$SETTINGS_FILE" 2>/dev/null; then
+                tmp_file=$(mktemp)
+                jq --arg hook "$hook" '
+                  .hooks.PermissionRequest //= [] |
+                  .hooks.PermissionRequest |= map(select(.hooks[0].command | contains($hook) | not))
+                ' "$SETTINGS_FILE" > "$tmp_file" && mv "$tmp_file" "$SETTINGS_FILE"
+                echo -e "${GREEN}  ✓ Removed from settings.json: $hook${NC}"
+            fi
+        fi
+    done
+fi
+
 echo ""
 echo "Uninstall Summary"
 echo "================="
@@ -214,10 +300,17 @@ if [[ ${#existing_skills[@]} -gt 0 ]]; then
     fi
 fi
 
-total_fail=$((agents_fail + commands_fail + skills_fail))
+if [[ ${#existing_hooks[@]} -gt 0 ]]; then
+    echo -e "${GREEN}Successfully uninstalled: $hooks_success hooks${NC}"
+    if [[ $hooks_fail -gt 0 ]]; then
+        echo -e "${RED}Failed to uninstall: $hooks_fail hooks${NC}"
+    fi
+fi
+
+total_fail=$((agents_fail + commands_fail + skills_fail + hooks_fail))
 if [[ $total_fail -eq 0 ]]; then
     echo ""
-    echo "All agents, commands, and skills have been successfully removed!"
+    echo "All agents, commands, skills, and hooks have been successfully removed!"
     echo "Restart your Claude Code terminal to reflect the changes."
 fi
 
