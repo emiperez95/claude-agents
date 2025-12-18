@@ -407,11 +407,12 @@ if [[ ${#HOOK_PATHS[@]} -gt 0 ]]; then
         else
             # Add PermissionRequest hook entry using jq
             if command -v jq &>/dev/null; then
-                # Create the hook entry
+                # Create the hook entry with matcher field (required for hooks to work)
                 tmp_file=$(mktemp)
                 jq --arg cmd "$global_hook_path" '
                   .hooks.PermissionRequest //= [] |
                   .hooks.PermissionRequest += [{
+                    "matcher": "*",
                     "hooks": [{
                       "type": "command",
                       "command": $cmd
