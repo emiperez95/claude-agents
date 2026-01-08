@@ -1,4 +1,5 @@
 ---
+name: jira-status
 description: Get full Jira board status with tickets grouped by column
 argument-hint: "<PROJECT>"
 ---

@@ -39,6 +39,19 @@ echo "Claude Agents & Commands Installer"
 echo "==================================="
 echo ""
 
+# Validate YAML frontmatter before installing
+if [[ -x "$SCRIPT_DIR/lint-agents.sh" ]]; then
+    echo -e "${BLUE}Validating YAML frontmatter...${NC}"
+    if ! "$SCRIPT_DIR/lint-agents.sh" --quiet; then
+        echo ""
+        echo -e "${RED}Validation failed. Run ./lint-agents.sh for details.${NC}"
+        echo "Fix YAML errors before installing."
+        exit 1
+    fi
+    echo -e "${GREEN}Validation passed${NC}"
+    echo ""
+fi
+
 # Auto-discover agents, commands, and skills from both:
 # 1. Private (flat structure): agents/*.md, commands/*.md, skills/*/SKILL.md
 # 2. Public (plugin structure): cc-toolkit/agents/*/agents/*.md, etc.
