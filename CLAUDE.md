@@ -41,6 +41,7 @@ Distributed via `/plugin marketplace add emiperez95/cc-toolkit`
 | Agent | hermes-pr-courier | Collects PR content and metadata |
 | Agent | minerva-notion-oracle | Searches Notion workspaces |
 | Command | gemini | Large codebase analysis via Gemini CLI |
+| Command | codex | OpenAI Codex CLI with local and cloud execution |
 | Skill | athena-pr-reviewer | Multi-LLM PR reviewer (8 parallel reviewers) |
 | Skill | athena-pr-reviewer-lite | Claude-only PR reviewer (6 reviewers) |
 
@@ -186,6 +187,13 @@ rclone backend copyid gdrive: {FILE_ID} /tmp/  # Download
 gemini -p "@src/ Analyze architecture"         # @ includes files/dirs
 ```
 
+### Codex CLI
+```bash
+codex exec "Your prompt here"                  # Local execution
+codex exec --full-auto "Fix lint errors"       # Skip approvals
+codex cloud exec --env ENV --attempts 3 "msg"  # Parallel cloud execution
+```
+
 ## Testing Triggers
 
 After `./install-agents.sh --force`, restart terminal and test:
@@ -197,6 +205,7 @@ After `./install-agents.sh --force`, restart terminal and test:
 - "Find API docs in Notion" → minerva-notion-oracle
 - "Read this Google Doc" → clio-docs-oracle
 - "/gemini @src/ overview" → gemini command
+- "/codex review this approach" → codex command
 
 ## Requirements
 
@@ -208,4 +217,5 @@ acli jira auth status            # Atlassian CLI
 # Optional (for specific plugins)
 rclone listremotes               # Should show gdrive:
 gemini --version                 # Gemini CLI
+codex --version                  # Codex CLI
 ```
