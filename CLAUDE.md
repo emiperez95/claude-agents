@@ -51,6 +51,7 @@ Personal use only, not distributed
 | Type | Name | Description |
 |------|------|-------------|
 | Agent | hephaestus-workspace-forge | Manages worktrees and tmux sessions |
+| Agent | janus-wt-portal | Proactive worktree management via wt command |
 | Command | jira-status | Shows Jira board with session indicators |
 
 ## Installation and Management
@@ -204,6 +205,7 @@ After `./install-agents.sh --force`, restart terminal and test:
 - "Review PR #789" → athena-pr-reviewer skill
 - "Find API docs in Notion" → minerva-notion-oracle
 - "Read this Google Doc" → clio-docs-oracle
+- "Work on ticket ABC-123" → janus-wt-portal
 - "/gemini @src/ overview" → gemini command
 - "/codex review this approach" → codex command
 
