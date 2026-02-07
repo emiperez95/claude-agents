@@ -44,6 +44,7 @@ Distributed via `/plugin marketplace add emiperez95/cc-toolkit`
 | Command | codex | OpenAI Codex CLI with local and cloud execution |
 | Skill | athena-pr-reviewer | Multi-LLM PR reviewer (8 parallel reviewers) |
 | Skill | athena-pr-reviewer-lite | Claude-only PR reviewer (6 reviewers) |
+| Skill | harvest-timesheet | Automate Harvest timesheet from Google Calendar |
 
 ### Private Plugins (root level)
 Personal use only, not distributed
@@ -161,6 +162,15 @@ Each plugin follows this format:
 
 > **Sync Guidance**: When modifying athena-pr-reviewer, reflect applicable changes to athena-pr-reviewer-lite. The lite version excludes Gemini and Codex reviewers but shares the same Claude reviewer prompts and orchestration logic.
 
+**Harvest Timesheet** - Automates monthly Harvest timesheet from Google Calendar meetings
+
+**Key Features:**
+- Reads Google Calendar meetings via Chrome DevTools MCP
+- Categorizes meetings (project, other, ignored) with growing memory
+- Fills Harvest weekly grid with calculated hours
+- Config + learned categorizations stored in `~/.claude/harvest-timesheet.local.md`
+- Handles login detection for both Google Calendar and Harvest
+
 ## CLI Reference
 
 ### GitHub CLI (PR agents)
@@ -208,6 +218,7 @@ After `./install-agents.sh --force`, restart terminal and test:
 - "Work on ticket ABC-123" → janus-wt-portal
 - "/gemini @src/ overview" → gemini command
 - "/codex review this approach" → codex command
+- "/harvest-timesheet" or "fill my timesheet" → harvest-timesheet skill
 
 ## Requirements
 
