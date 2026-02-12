@@ -138,24 +138,21 @@ Replace `TICKET-ID` with the actual ticket key (e.g., PROJ-123).
 
 ### If the ticket has no session (-)
 
-Use the hephaestus-workspace-forge agent to create a worktree and session. The type depends on ticket ownership:
+Use the janus-wt-portal agent to create a worktree. The type depends on ticket ownership:
 
 **For tickets in "Ready For Review (To Review)"** (others' work you need to review):
 ```
-Task tool with subagent_type="hephaestus-workspace-forge"
+Task tool with subagent_type="janus-wt-portal"
 Prompt: "Create a review worktree for TICKET-ID"
 ```
 
 **For tickets in "In Progress", "Has Review", or "To Do"** (your work or available work):
 ```
-Task tool with subagent_type="hephaestus-workspace-forge"
+Task tool with subagent_type="janus-wt-portal"
 Prompt: "Create a worktree for TICKET-ID"
 ```
 
-The agent will:
-1. Create a git worktree for the ticket branch (with `--review` flag for review sessions)
-2. Configure a sesh session for the worktree
-3. Optionally switch to the new session when done
+The agent will create a git worktree for the ticket branch using the `wt` command.
 
 ## Requirements
 

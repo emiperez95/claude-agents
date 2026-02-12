@@ -8,7 +8,7 @@ Private development workspace for Claude Code plugins. Combines private plugins 
 .
 ├── cc-toolkit/              # Public submodule → github.com/emiperez95/cc-toolkit
 ├── agents/                  # Private agents (flat .md files)
-│   └── hephaestus-workspace-forge.md
+│   └── janus-wt-portal.md
 ├── commands/                # Private commands (flat .md files)
 │   └── jira-status.md
 ├── skills/                  # Private skills (folders with SKILL.md)
@@ -38,10 +38,8 @@ See [cc-toolkit/README.md](cc-toolkit/README.md) for public plugin documentation
 
 ## Private Plugins
 
-### Hephaestus Workspace Forge (Agent)
-Orchestrates development environment setup:
-- Manages git worktrees via `cs-wt` command (Clear Session project)
-- Manages tmux/sesh sessions via `sesh-cmd` command
+### Janus WT Portal (Agent)
+Proactive worktree management via the `wt` command.
 
 ### Jira Status (Command)
 Returns focused sprint board status with tickets grouped by actionable sections:
@@ -61,7 +59,7 @@ Returns focused sprint board status with tickets grouped by actionable sections:
 | Agent | heimdall-pr-guardian | public | Monitors PR status and comments |
 | Agent | hermes-pr-courier | public | Collects PR content and metadata |
 | Agent | minerva-notion-oracle | public | Searches Notion workspaces |
-| Agent | **hephaestus-workspace-forge** | private | Manages worktrees and sessions |
+| Agent | **janus-wt-portal** | private | Proactive worktree management via wt |
 | Command | gemini | public | Large codebase analysis via Gemini CLI |
 | Command | **jira-status** | private | Jira board with session indicators |
 | Skill | athena-pr-reviewer | public | Multi-LLM PR reviewer (8 reviewers) |

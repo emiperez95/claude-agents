@@ -19,7 +19,7 @@ This repository is a **private workspace** for developing and managing Claude Co
 │   ├── skills/*/skills/*/SKILL.md  # Public skills (nested plugin format)
 │   └── .claude-plugin/marketplace.json
 ├── agents/                         # Private agents (flat files)
-│   └── hephaestus-workspace-forge.md
+│   └── janus-wt-portal.md
 ├── commands/                       # Private commands (flat files)
 │   └── jira-status.md
 ├── skills/                         # Private skills (folders with SKILL.md)
@@ -51,7 +51,6 @@ Personal use only, not distributed
 
 | Type | Name | Description |
 |------|------|-------------|
-| Agent | hephaestus-workspace-forge | Manages worktrees and tmux sessions |
 | Agent | janus-wt-portal | Proactive worktree management via wt command |
 | Command | jira-status | Shows Jira board with session indicators |
 
@@ -146,8 +145,6 @@ Each plugin follows this format:
 **Clio Docs Oracle** - Reads Google Drive files via rclone CLI
 
 ### Private Agents
-
-**Hephaestus Workspace Forge** - Manages git worktrees (cs-wt) and tmux sessions (sesh-cmd)
 
 ### Skills
 
