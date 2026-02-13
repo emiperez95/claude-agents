@@ -217,6 +217,7 @@ After `./install-agents.sh --force`, restart terminal and test:
 - "/gemini @src/ overview" → gemini command
 - "/codex review this approach" → codex command
 - "/harvest-timesheet" or "fill my timesheet" → harvest-timesheet skill
+- "/memory-compact" → memory-compact command
 
 ## Requirements
 
