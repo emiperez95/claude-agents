@@ -42,6 +42,7 @@ Distributed via `/plugin marketplace add emiperez95/cc-toolkit`
 | Agent | minerva-notion-oracle | Searches Notion workspaces |
 | Command | gemini | Large codebase analysis via Gemini CLI |
 | Command | codex | OpenAI Codex CLI with local and cloud execution |
+| Command | memory-compact | Compact and reorganize Claude Code memory files |
 | Skill | athena-pr-reviewer | Multi-LLM PR reviewer (8 parallel reviewers) |
 | Skill | athena-pr-reviewer-lite | Claude-only PR reviewer (6 reviewers) |
 | Skill | harvest-timesheet | Automate Harvest timesheet from Google Calendar |
