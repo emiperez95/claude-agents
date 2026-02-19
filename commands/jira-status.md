@@ -32,12 +32,12 @@ if [ -z "$CURRENT_USER" ]; then
   CURRENT_USER="__NO_MATCH__"
 fi
 
-# Get list of sesh sessions for session indicator
-SESH_LIST=$(sesh-cmd list 2>/dev/null || echo "")
+# Get list of tmux sessions for session indicator
+TMUX_LIST=$(tmux list-sessions -F '#{session_name}' 2>/dev/null || echo "")
 
 acli jira workitem search \
   --jql "project = $PROJECT AND sprint in openSprints() ORDER BY status ASC, updated DESC" \
-  --json --paginate 2>/dev/null | jq -r --arg user "$CURRENT_USER" --arg sesh "$SESH_LIST" '
+  --json --paginate 2>/dev/null | jq -r --arg user "$CURRENT_USER" --arg sessions "$TMUX_LIST" '
 
 [
   # In Progress - only my tickets
@@ -45,7 +45,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "In Progress (My Work)",
      show_assignee: false,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # Ready For Review - only others (for me to review)
@@ -53,7 +53,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "Ready For Review (To Review)",
      show_assignee: true,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned"), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), assignee: (.fields.assignee.displayName // "Unassigned"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # Has Review - only my tickets
@@ -61,7 +61,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "Has Review (My PRs)",
      show_assignee: false,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # To Do - all tickets
@@ -69,17 +69,17 @@ acli jira workitem search \
    if length > 0 then {
      status: "To Do",
      show_assignee: true,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned"), sesh: (if ($sesh | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), assignee: (.fields.assignee.displayName // "Unassigned"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end)
 ] |
 
 .[] |
 if .show_assignee then
-  "## \(.status) (\(.tickets | length))\n| Key | Summary | Assignee | Sesh |\n|-----|---------|----------|------|\n" +
-  (.tickets | map("| \(.key) | \(.summary) | \(.assignee) | \(.sesh) |") | join("\n")) + "\n"
+  "## \(.status) (\(.tickets | length))\n| Key | Summary | Epic/Parent | Assignee | Session |\n|-----|---------|-------------|----------|---------|\n" +
+  (.tickets | map("| \(.key) | \(.summary) | \(.epic) | \(.assignee) | \(.session) |") | join("\n")) + "\n"
 else
-  "## \(.status) (\(.tickets | length))\n| Key | Summary | Sesh |\n|-----|---------|------|\n" +
-  (.tickets | map("| \(.key) | \(.summary) | \(.sesh) |") | join("\n")) + "\n"
+  "## \(.status) (\(.tickets | length))\n| Key | Summary | Epic/Parent | Session |\n|-----|---------|-------------|--------|\n" +
+  (.tickets | map("| \(.key) | \(.summary) | \(.epic) | \(.session) |") | join("\n")) + "\n"
 end
 '
 ```
@@ -97,7 +97,7 @@ end
 - **Ready For Review (To Review)**: Others' tickets waiting for code review
 - **Has Review (My PRs)**: Your tickets that have received reviews
 - **To Do**: All tickets not yet started (for picking up work)
-- **Sesh column**: Shows ✓ if a sesh/tmux session exists for the ticket, - otherwise
+- **Session column**: Shows ✓ if a tmux session exists for the ticket, - otherwise
 
 ## Presentation Instructions
 
@@ -106,15 +106,15 @@ When presenting results to the user, add letter indices (A, B, C, ...) to each t
 Example output format:
 ```
 ## In Progress (My Work) (2)
-| # | Key | Summary | Sesh |
-|---|-----|---------|------|
-| A | PROJ-123 | Feature X | ✓ |
-| B | PROJ-456 | Bug fix Y | - |
+| # | Key | Summary | Epic/Parent | Session |
+|---|-----|---------|-------------|---------|
+| A | PROJ-123 | Feature X | PROJ-10 | ✓ |
+| B | PROJ-456 | Bug fix Y | PROJ-11 | - |
 
 ## Ready For Review (To Review) (1)
-| # | Key | Summary | Assignee | Sesh |
-|---|-----|---------|----------|------|
-| C | PROJ-789 | Feature Z | Juan | ✓ |
+| # | Key | Summary | Epic/Parent | Assignee | Session |
+|---|-----|---------|-------------|----------|---------|
+| C | PROJ-789 | Feature Z | PROJ-10 | Juan | ✓ |
 ```
 
 ## Session Switching
@@ -126,11 +126,10 @@ When the user references a letter (e.g., "switch to A", "go to G", or just "A"):
 Switch to that session:
 
 ```bash
-# Find the sesh session containing the ticket ID and connect to it
-# sesh connect handles both running and configured-but-not-running sessions
-SESSION=$(sesh list -c -t 2>/dev/null | grep -m1 'TICKET-ID')
+# Find the tmux session containing the ticket ID and switch to it
+SESSION=$(tmux list-sessions -F '#{session_name}' 2>/dev/null | grep -m1 'TICKET-ID')
 if [ -n "$SESSION" ]; then
-  sesh connect "$SESSION"
+  tmux switch-client -t "$SESSION"
 fi
 ```
 
@@ -138,24 +137,24 @@ Replace `TICKET-ID` with the actual ticket key (e.g., PROJ-123).
 
 ### If the ticket has no session (-)
 
-Use the janus-wt-portal agent to create a worktree. The type depends on ticket ownership:
+Use the janus-wt-portal agent to create a worktree. The type and prompt depend on ticket ownership:
 
 **For tickets in "Ready For Review (To Review)"** (others' work you need to review):
 ```
 Task tool with subagent_type="janus-wt-portal"
-Prompt: "Create a review worktree for TICKET-ID"
+Prompt: "Create a review worktree for TICKET-ID with --auto-approve --prompt 'Review TICKET-ID, gather all information required and make a plan'"
 ```
 
 **For tickets in "In Progress", "Has Review", or "To Do"** (your work or available work):
 ```
 Task tool with subagent_type="janus-wt-portal"
-Prompt: "Create a worktree for TICKET-ID"
+Prompt: "Create a worktree for TICKET-ID with --auto-approve --prompt 'Work on TICKET-ID, gather all information required and make a plan'"
 ```
 
-The agent will create a git worktree for the ticket branch using the `wt` command.
+The `--prompt` flag tells `hive wt new` to send a startup message to Claude in the new session. The agent will create a git worktree for the ticket branch using `hive wt`.
 
 ## Requirements
 
 - `acli` CLI must be authenticated (`acli jira auth status`)
-- `sesh-cmd` for session indicator (optional, gracefully degrades)
+- `tmux` for session indicator
 - User must have access to the specified project
