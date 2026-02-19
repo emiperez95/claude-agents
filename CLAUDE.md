@@ -19,7 +19,6 @@ This repository is a **private workspace** for developing and managing Claude Co
 │   ├── skills/*/skills/*/SKILL.md  # Public skills (nested plugin format)
 │   └── .claude-plugin/marketplace.json
 ├── agents/                         # Private agents (flat files)
-│   └── janus-wt-portal.md
 ├── commands/                       # Private commands (flat files)
 │   └── jira-status.md
 ├── skills/                         # Private skills (folders with SKILL.md)
@@ -52,8 +51,13 @@ Personal use only, not distributed
 
 | Type | Name | Description |
 |------|------|-------------|
-| Agent | janus-wt-portal | Proactive worktree management via wt command |
 | Command | jira-status | Shows Jira board with session indicators |
+
+### External Plugins (managed in other projects)
+
+| Type | Name | Location | Description |
+|------|------|----------|-------------|
+| Agent | janus-wt-portal | `/Users/emilianoperez/Projects/00-Personal/hive/.claude/agents/` | Proactive worktree management via hive wt |
 
 ## Installation and Management
 
@@ -213,7 +217,6 @@ After `./install-agents.sh --force`, restart terminal and test:
 - "Review PR #789" → athena-pr-reviewer skill
 - "Find API docs in Notion" → minerva-notion-oracle
 - "Read this Google Doc" → clio-docs-oracle
-- "Work on ticket ABC-123" → janus-wt-portal
 - "/gemini @src/ overview" → gemini command
 - "/codex review this approach" → codex command
 - "/harvest-timesheet" or "fill my timesheet" → harvest-timesheet skill

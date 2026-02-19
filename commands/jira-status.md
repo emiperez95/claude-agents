@@ -45,7 +45,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "In Progress (My Work)",
      show_assignee: false,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # Ready For Review - only others (for me to review)
@@ -53,7 +53,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "Ready For Review (To Review)",
      show_assignee: true,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), assignee: (.fields.assignee.displayName // "Unassigned"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # Has Review - only my tickets
@@ -61,7 +61,7 @@ acli jira workitem search \
    if length > 0 then {
      status: "Has Review (My PRs)",
      show_assignee: false,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end),
 
   # To Do - all tickets
@@ -69,17 +69,17 @@ acli jira workitem search \
    if length > 0 then {
      status: "To Do",
      show_assignee: true,
-     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), epic: (.fields.parent.key // "-"), assignee: (.fields.assignee.displayName // "Unassigned"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
+     tickets: map(.key as $k | {key: .key, summary: (.fields.summary | if length > 50 then .[:47] + "..." else . end), assignee: (.fields.assignee.displayName // "Unassigned"), session: (if ($sessions | contains($k)) then "✓" else "-" end)})
    } else empty end)
 ] |
 
 .[] |
 if .show_assignee then
-  "## \(.status) (\(.tickets | length))\n| Key | Summary | Epic/Parent | Assignee | Session |\n|-----|---------|-------------|----------|---------|\n" +
-  (.tickets | map("| \(.key) | \(.summary) | \(.epic) | \(.assignee) | \(.session) |") | join("\n")) + "\n"
+  "## \(.status) (\(.tickets | length))\n| Key | Summary | Assignee | Session |\n|-----|---------|----------|---------|\n" +
+  (.tickets | map("| \(.key) | \(.summary) | \(.assignee) | \(.session) |") | join("\n")) + "\n"
 else
-  "## \(.status) (\(.tickets | length))\n| Key | Summary | Epic/Parent | Session |\n|-----|---------|-------------|--------|\n" +
-  (.tickets | map("| \(.key) | \(.summary) | \(.epic) | \(.session) |") | join("\n")) + "\n"
+  "## \(.status) (\(.tickets | length))\n| Key | Summary | Session |\n|-----|---------|--------|\n" +
+  (.tickets | map("| \(.key) | \(.summary) | \(.session) |") | join("\n")) + "\n"
 end
 '
 ```
@@ -106,15 +106,15 @@ When presenting results to the user, add letter indices (A, B, C, ...) to each t
 Example output format:
 ```
 ## In Progress (My Work) (2)
-| # | Key | Summary | Epic/Parent | Session |
-|---|-----|---------|-------------|---------|
-| A | PROJ-123 | Feature X | PROJ-10 | ✓ |
-| B | PROJ-456 | Bug fix Y | PROJ-11 | - |
+| # | Key | Summary | Session |
+|---|-----|---------|---------|
+| A | PROJ-123 | Feature X | ✓ |
+| B | PROJ-456 | Bug fix Y | - |
 
 ## Ready For Review (To Review) (1)
-| # | Key | Summary | Epic/Parent | Assignee | Session |
-|---|-----|---------|-------------|----------|---------|
-| C | PROJ-789 | Feature Z | PROJ-10 | Juan | ✓ |
+| # | Key | Summary | Assignee | Session |
+|---|-----|---------|----------|---------|
+| C | PROJ-789 | Feature Z | Juan | ✓ |
 ```
 
 ## Session Switching
