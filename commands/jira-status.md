@@ -121,6 +121,13 @@ Example output format:
 
 When the user references a letter (e.g., "switch to A", "go to G", or just "A"):
 
+**For tickets in "Ready For Review (To Review)"** (others' work you need to review):
+Use the Skill tool to invoke `athena-pr-reviewer` with args set to the ticket key (e.g., `skill: "athena-pr-reviewer", args: "CSD-2345"`).
+The athena skill will detect the PR from the Jira ticket and perform a full multi-reviewer code review.
+This works from the current session regardless of whether a tmux session exists for the ticket.
+
+**For all other tickets ("In Progress", "Has Review", "To Do"):**
+
 ### If the ticket has a session (✓)
 
 Switch to that session:
@@ -137,19 +144,14 @@ Replace `TICKET-ID` with the actual ticket key (e.g., PROJ-123).
 
 ### If the ticket has no session (-)
 
-Use the janus-wt-portal agent to create a worktree. The type and prompt depend on ticket ownership:
+Use the janus-wt-portal agent to create a worktree. Include the ticket summary so the branch name is descriptive (e.g., `CSD-2576-auth-flow` not just `CSD-2576`).
 
-**For tickets in "Ready For Review (To Review)"** (others' work you need to review):
 ```
 Task tool with subagent_type="janus-wt-portal"
-Prompt: "Create a review worktree for TICKET-ID with --auto-approve --prompt 'Review TICKET-ID, gather all information required and make a plan'"
+Prompt: "Create a worktree for TICKET-ID TICKET-SUMMARY with --auto-approve --prompt 'Work on TICKET-ID, gather all information required and make a plan'"
 ```
 
-**For tickets in "In Progress", "Has Review", or "To Do"** (your work or available work):
-```
-Task tool with subagent_type="janus-wt-portal"
-Prompt: "Create a worktree for TICKET-ID with --auto-approve --prompt 'Work on TICKET-ID, gather all information required and make a plan'"
-```
+Replace TICKET-SUMMARY with the actual summary from the table (e.g., "auth flow redesign"). The janus agent will sanitize it into the branch name (lowercase, hyphens).
 
 The `--prompt` flag tells `hive wt new` to send a startup message to Claude in the new session. The agent will create a git worktree for the ticket branch using `hive wt`.
 
