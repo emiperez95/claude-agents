@@ -26,10 +26,15 @@ Run this bash command to identify worktrees to prune:
 #!/bin/bash
 PROJECT="${1:-CSD}"
 
-# Detect hive project key from git remote
-HIVE_PROJECT=$(hive project list 2>/dev/null | awk 'NR>2 && NF>0 {print $1; exit}')
+# Detect hive project key by matching current directory to project paths
+HIVE_PROJECT=$(hive project list 2>/dev/null | awk -v cwd="$PWD" '
+  NR>2 && NF>0 {
+    path = $NF
+    gsub(/^~/, ENVIRON["HOME"], path)
+    if (path == cwd) { print $1; exit }
+  }')
 if [ -z "$HIVE_PROJECT" ]; then
-  echo "No hive projects configured."
+  echo "No hive project found for current directory: $PWD"
   exit 1
 fi
 
