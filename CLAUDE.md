@@ -43,8 +43,7 @@ Distributed via `/plugin marketplace add emiperez95/cc-toolkit`
 | Command | codex | OpenAI Codex CLI with local and cloud execution |
 | Command | memory-compact | Compact and reorganize Claude Code memory files |
 | Command | pr-status | Get all open PRs with CI state, reviews, and freshness |
-| Skill | athena-pr-reviewer | Multi-LLM PR reviewer (8 parallel reviewers) |
-| Skill | athena-pr-reviewer-lite | Claude-only PR reviewer (6 reviewers) |
+| Skill | athena-pr-reviewer | Multi-LLM PR reviewer (9 parallel reviewers) |
 | Skill | harvest-timesheet | Automate Harvest timesheet from Google Calendar |
 
 ### Private Plugins (root level)
@@ -154,16 +153,13 @@ Each plugin follows this format:
 
 ### Skills
 
-**Athena PR Reviewer** - Orchestrates 8 parallel reviewers (Gemini + Codex + 6 Claude specialists)
-
-**Athena PR Reviewer Lite** - 6 Claude specialists only, no external dependencies
+**Athena PR Reviewer** - Orchestrates 9 parallel reviewers (Gemini + Codex + 7 Claude specialists)
 
 **Key Features:**
 - Annotated diff with explicit line numbers for accurate references
 - Verification step to filter hallucinated findings
 - Rejected findings saved to `rejected.md` for manual review
-
-> **Sync Guidance**: When modifying athena-pr-reviewer, reflect applicable changes to athena-pr-reviewer-lite. The lite version excludes Gemini and Codex reviewers but shares the same Claude reviewer prompts and orchestration logic.
+- requirements-checker specialist self-gates on AC quality; its AC Coverage table is the source of truth for Requirements Status when present
 
 **Harvest Timesheet** - Automates monthly Harvest timesheet from Google Calendar meetings
 
