@@ -27,12 +27,17 @@ Run this bash command to identify worktrees to prune:
 PROJECT="${1:-CSD}"
 
 # Detect hive project key by matching current directory to project paths
-HIVE_PROJECT=$(hive project list 2>/dev/null | awk -v cwd="$PWD" '
-  NR>2 && NF>0 {
-    path = $NF
-    gsub(/^~/, ENVIRON["HOME"], path)
-    if (path == cwd) { print $1; exit }
-  }')
+# (Implemented in pure shell so slash-command argument substitution doesn't strip awk's positional refs.)
+HIVE_PROJECT=""
+while IFS= read -r _line; do
+  case "$_line" in ""|"KEY"*|"-"*) continue ;; esac
+  _path="${_line##* }"
+  _path="${_path/#\~/$HOME}"
+  if [ "$_path" = "$PWD" ]; then
+    HIVE_PROJECT="${_line%% *}"
+    break
+  fi
+done < <(hive project list 2>/dev/null)
 if [ -z "$HIVE_PROJECT" ]; then
   echo "No hive project found for current directory: $PWD"
   exit 1
@@ -45,7 +50,13 @@ if [ -z "$CURRENT_USER" ]; then
 fi
 
 # Get hive worktrees (skip header lines, extract branch and path)
-WT_LIST=$(hive wt list "$HIVE_PROJECT" 2>/dev/null | awk 'NR>2 && NF>=4 {split($1,a,"/"); print a[2] "|" $NF}')
+WT_LIST=$(hive wt list "$HIVE_PROJECT" 2>/dev/null | tail -n +3 | while IFS= read -r _wtline; do
+  [ -z "$_wtline" ] && continue
+  _first="${_wtline%% *}"
+  _last="${_wtline##* }"
+  _branch="${_first#*/}"
+  echo "$_branch|$_last"
+done)
 
 # Get all tickets in open sprints (to check what's NOT in sprint)
 SPRINT_TICKETS=$(acli jira workitem search \
