@@ -62,8 +62,7 @@ Returns focused sprint board status with tickets grouped by actionable sections:
 | Agent | **janus-wt-portal** | private | Proactive worktree management via wt |
 | Command | gemini | public | Large codebase analysis via Gemini CLI |
 | Command | **jira-status** | private | Jira board with session indicators |
-| Skill | athena-pr-reviewer | public | Multi-LLM PR reviewer (8 reviewers) |
-| Skill | athena-pr-reviewer-lite | public | Claude-only PR reviewer (6 reviewers) |
+| Skill | athena-pr-reviewer-workflow | public | PR reviewer (7 Opus specialists + Sonnet verifiers + synthesis) run in a background workflow |
 
 ## Workflow
 

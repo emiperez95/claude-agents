@@ -43,8 +43,7 @@ Distributed via `/plugin marketplace add emiperez95/cc-toolkit`
 | Command | codex | OpenAI Codex CLI with local and cloud execution |
 | Command | memory-compact | Compact and reorganize Claude Code memory files |
 | Command | pr-status | Get all open PRs with CI state, reviews, and freshness |
-| Skill | athena-pr-reviewer | Multi-LLM PR reviewer (9 parallel reviewers) |
-| Skill | athena-pr-reviewer-workflow | Workflow-mode PR reviewer — Opus reviewers + Sonnet batched verifiers + Sonnet synthesis, runs in background to keep main-thread context clean |
+| Skill | athena-pr-reviewer-workflow | PR reviewer — 7 Opus specialists + Sonnet batched verifiers + Sonnet synthesis, runs in a background workflow to keep main-thread context clean |
 | Skill | harvest-timesheet | Automate Harvest timesheet from Google Calendar |
 
 ### Private Plugins (root level)
@@ -154,15 +153,7 @@ Each plugin follows this format:
 
 ### Skills
 
-**Athena PR Reviewer** - Orchestrates 9 parallel reviewers (Gemini + Codex + 7 Claude specialists)
-
-**Key Features:**
-- Annotated diff with explicit line numbers for accurate references
-- Verification step to filter hallucinated findings
-- Rejected findings saved to `rejected.md` for manual review
-- requirements-checker specialist self-gates on AC quality; its AC Coverage table is the source of truth for Requirements Status when present
-
-**Athena PR Reviewer — Workflow Edition** - Same pipeline but runs inside a background Workflow, keeping reviewer agents out of main-thread context. Triggered explicitly with "workflow review", "background review", "workflow-mode", or `/athena-workflow`.
+**Athena PR Reviewer (Workflow Edition)** - The PR reviewer. The full pipeline runs inside a background Workflow, keeping reviewer agents out of main-thread context; the main thread sees only the curated structured report. Default for any "review PR X" / "review this branch" / "review CSD-123" request, plus explicit "workflow review", "background review", or `/athena-workflow`.
 
 **Key Features:**
 - 7 Claude specialists pinned to Opus (where reviewer quality matters)
@@ -170,8 +161,9 @@ Each plugin follows this format:
 - 1 synthesis pass on Sonnet groups findings across reviewers and assigns emergent themes
 - Cross-reviewer agreement triggers severity priority-boost
 - Verifier verdicts: VERIFIED / PARTIAL (real but inaccurate, surfaced) / REJECTED (hallucination, hidden)
-- Reuses prompts and scripts from the original `athena-pr-reviewer` skill — that skill must be installed
-- ~85% cheaper than orig athena at comparable quality; main thread sees only the curated structured report
+- Annotated diff with explicit line numbers for accurate references
+- Full artifact persistence under `/tmp/athena-review-<PR>/` for forensics
+- Self-contained: bundles its own reviewer prompts + context-gathering scripts (no other skill required)
 
 **Harvest Timesheet** - Automates monthly Harvest timesheet from Google Calendar meetings
 
@@ -223,7 +215,7 @@ After `./install-agents.sh --force`, restart terminal and test:
 - "Check PR comments" → heimdall-pr-guardian
 - "Get context for PROJ-123" → atlas-jira-analyst
 - "Create a ticket" → apollo-jira-scribe
-- "Review PR #789" → athena-pr-reviewer skill
+- "Review PR #789" → athena-pr-reviewer-workflow skill
 - "Find API docs in Notion" → minerva-notion-oracle
 - "Read this Google Doc" → clio-docs-oracle
 - "/gemini @src/ overview" → gemini command

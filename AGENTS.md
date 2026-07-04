@@ -307,13 +307,13 @@ Add tool names to the `tools:` list in the frontmatter. Ensure the tools are ava
 ### Comprehensive PR Review
 ```
 "Review PR #456"
-→ Triggers athena-pr-reviewer (which orchestrates other agents)
+→ Triggers athena-pr-reviewer-workflow (which orchestrates other agents)
 ```
 
 ### Code Review with Context
 ```
 "Review PR #456 and check our coding standards in Notion"
-→ Triggers athena-pr-reviewer and minerva-notion-oracle
+→ Triggers athena-pr-reviewer-workflow and minerva-notion-oracle
 ```
 
 ### Checking PR Readiness
@@ -410,5 +410,5 @@ The skill gathers comprehensive context via `gather-context.sh`:
 ### Example Usage
 ```
 User: "Review PR #456"
-Assistant: [Invokes athena-pr-reviewer skill which runs 8 parallel reviews]
+Assistant: [Invokes athena-pr-reviewer-workflow skill which runs 7 parallel reviews in a background workflow]
 ```

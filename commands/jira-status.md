@@ -147,7 +147,7 @@ Example output format:
 When the user references a letter (e.g., "switch to A", "go to G", or just "A"):
 
 **For tickets in "Ready For Review (To Review)"** (others' work you need to review):
-Use the Skill tool to invoke `athena-pr-reviewer` with args set to the ticket key (e.g., `skill: "athena-pr-reviewer", args: "CSD-2345"`).
+Use the Skill tool to invoke `athena-pr-reviewer-workflow` with args set to the ticket key (e.g., `skill: "athena-pr-reviewer-workflow", args: "CSD-2345"`).
 The athena skill will detect the PR from the Jira ticket and perform a full multi-reviewer code review.
 This works from the current session regardless of whether a tmux session exists for the ticket.
 

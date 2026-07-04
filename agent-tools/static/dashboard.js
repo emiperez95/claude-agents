@@ -253,7 +253,7 @@ function loadToolsMatrix() {
     Object.keys(matrix).forEach(agent => {
         // Shorten agent names for column headers
         const shortName = agent.replace('atlas-jira-analyst', 'Atlas')
-            .replace('athena-pr-reviewer', 'Athena')
+            .replace('athena-pr-reviewer-workflow', 'Athena')
             .replace('heimdall-pr-guardian', 'Heimdall')
             .replace('hermes-pr-courier', 'Hermes')
             .replace('minerva-notion-oracle', 'Minerva');

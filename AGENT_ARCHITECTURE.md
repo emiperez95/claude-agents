@@ -75,7 +75,7 @@ An Orchestrator is an agent that:
 - **Execution**: Parent agent runs commands and performs synthesis
 
 #### Current Orchestrators
-- `athena-pr-reviewer`: Coordinates comprehensive PR review workflows
+- `athena-pr-reviewer-workflow`: Coordinates comprehensive PR review workflows
 
 #### Example Orchestrator Behavior
 ```
