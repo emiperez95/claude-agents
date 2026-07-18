@@ -1,0 +1,3 @@
+# Build artifacts (compiled per-machine by the wrapper)
+bin/reminders-bin
+bin/.build.log

@@ -1,0 +1,23 @@
+#!/bin/bash
+# Wrapper for the Swift/EventKit reminders CLI.
+# Auto-compiles reminders.swift on first use or after edits, embedding the
+# Info.plist (Reminders usage description) and ad-hoc signing so the TCC grant
+# survives rebuilds. All output is JSON.
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SRC="$DIR/reminders.swift"
+PLIST="$DIR/Info.plist"
+BIN="$DIR/reminders-bin"
+ID="com.emiperez.apple-reminders-cli"
+
+if [[ ! -x "$BIN" || "$SRC" -nt "$BIN" || "$PLIST" -nt "$BIN" ]]; then
+  if ! swiftc -O "$SRC" \
+      -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker "$PLIST" \
+      -o "$BIN" 2> "$DIR/.build.log"; then
+    printf '{"ok":false,"error":"build failed; see %s"}\n' "$DIR/.build.log"
+    exit 1
+  fi
+  codesign --force --sign - --identifier "$ID" "$BIN" 2>>"$DIR/.build.log" || true
+fi
+
+exec "$BIN" "$@"
